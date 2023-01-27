@@ -1,0 +1,31 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/spfx-serve.schema.json",
+  "port": 4321,
+  "https": true,
+  "serveConfigurations": {
+    "default": {
+      "pageUrl": "https://groverale.sharepoint.com/sites/home/demoDocs/Forms/AllItems.aspx",
+      "customActions": {
+        "0f487797-52a2-41af-8f7b-1f357a2f8406": {
+          "location": "ClientSideExtension.ListViewCommandSet.CommandBar",
+          "properties": {
+            "sampleTextOne": "One item is selected in the list",
+            "sampleTextTwo": "This command is always visible."
+          }
+        }
+      }
+    },
+    "archiveButton": {
+      "pageUrl": "https://groverale.sharepoint.com/sites/home/demoDocs/Forms/AllItems.aspx",
+      "customActions": {
+        "0f487797-52a2-41af-8f7b-1f357a2f8406": {
+          "location": "ClientSideExtension.ListViewCommandSet.CommandBar",
+          "properties": {
+            "sampleTextOne": "One item is selected in the list",
+            "sampleTextTwo": "This command is always visible."
+          }
+        }
+      }
+    }
+  }
+}
