@@ -60,15 +60,24 @@ export default class ArchiveButtonCommandSet extends BaseListViewCommandSet<IArc
         var serverRelativeUrlToFile: string = this.context.listView.selectedRows[0].getValueByName("FileRef")
         var pathToFile: string = serverRelativeUrlToFile.substring(this.context.pageContext.web.serverRelativeUrl.length)
         var pathToFolder: string = pathToFile.substring(0, pathToFile.length - fileName.length - 1)
+        var uniqueIdValue: string = this.context.listView.selectedRows[0].getValueByName("UniqueId")
+        var uniqueId: string = uniqueIdValue.substring(1, uniqueIdValue.length - 2)
+
+
+        // need to pass all metadata really
 
         const body: string = JSON.stringify({
           'siteUrl': this.context.pageContext.web.absoluteUrl,
           'pathToFile': pathToFile,
           'pathToFolder': pathToFolder,
           'fileName': fileName,
+          'listTitle': this.context.listView.list.title,
           'serverRelative': this.context.listView.list.serverRelativeUrl,
           'modified': this.context.listView.selectedRows[0].getValueByName("Modified"),
-          'modifiedBy': this.context.listView.selectedRows[0].getValueByName("Modified_x0020_By")
+          'modifiedBy': this.context.listView.selectedRows[0].getValueByName("Editor"),
+          'uniqueId': uniqueId,
+          'id': this.context.listView.selectedRows[0].getValueByName("ID"),
+          'identifier': encodeURIComponent(pathToFile.substring(1))
         });
 
         const httpClientOptions: IHttpClientOptions = {
