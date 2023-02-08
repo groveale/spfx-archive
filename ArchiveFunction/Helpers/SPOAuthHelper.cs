@@ -5,13 +5,13 @@ using Microsoft.SharePoint.Client;
 
 namespace groveale
 {
-    public class AuthHelper
+    public class SPOAuthHelper
     {
 
         public string siteUrl {get;set;}
         public ClientContext clientContext {get;set;}
 
-        public AuthHelper(string siteUrl)
+        public SPOAuthHelper(string siteUrl)
         {
             this.siteUrl = siteUrl;
         }

@@ -11,13 +11,14 @@ using System.Linq;
 
 namespace groveale
 {
-    public static class ArchiveFile
+    public static class RehydrateFile
     {
-        [FunctionName("ArchiveFile")]
+        [FunctionName("RehydrateFile")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req,
             ILogger log)
         {
+
             var authHeader = req.Headers["Authorization"];
             if (!authHeader.Any() || !authHeader[0].StartsWith("Bearer "))
             {
@@ -41,13 +42,28 @@ namespace groveale
 
             try
             {
+
                 // Load settings and initialize GraphHelper with app only auth
                 // Method also extracts the required MSGraph data from the spItemURL
                 var settings = Settings.LoadSettings();
                 GraphHelper.InitializeGraphForAppOnlyAuth(settings, spItemUrl);
 
-                // Get metadata content and create stub in SPO (.url)
+                // Get file conetent from Blob storage and create in SPO
+                //var blobContent = AzureBlobHelper.
+
+                // Get metadata from stub (url) apply metadata to SPO item
                 var metaData = await GraphHelper.GetItemMetadata();
+                var spoFile = await GraphHelper.CreateItem(metaData, fileLeafRef, stub: false);
+
+
+                // Delete Stub, delete blob
+                await GraphHelper.DeleteItem();
+                //await AzureBlobHelper.DeleteBlob();
+
+                
+
+                // Get metadata content and create stub in SPO (.url)
+                
                 var stub = await GraphHelper.CreateItem(metaData, fileLeafRef, stub: true);
 
                 // Get file content and create in Azure blob (using stub file id)
@@ -66,6 +82,7 @@ namespace groveale
                 // Return error in response
                 return new BadRequestObjectResult($"Error in request: {ex.Message}");
             }
+      
         }
     }
 }

@@ -5,7 +5,7 @@
       "name": "Hosted workbench",
       "type": "msedge",
       "request": "launch",
-      "url": "https://groverale.sharepoint.com/sites/archDemo2/Shared%20Documents/Forms/AllItems.aspx?debugManifestsFile=https%3A%2F%2Flocalhost%3A4321%2Ftemp%2Fmanifests%2Ejs&loadSPFX=true&customActions=%7B%220f487797%2D52a2%2D41af%2D8f7b%2D1f357a2f8406%22%3A%7B%22location%22%3A%22ClientSideExtension%2EListViewCommandSet%2ECommandBar%22%2C%22properties%22%3A%7B%22sampleTextOne%22%3A%22One%20item%20is%20selected%20in%20the%20list%22%2C%22sampleTextTwo%22%3A%22This%20command%20is%20always%20visible%2E%22%7D%7D%7D",
+      "url": "https://groverale.sharepoint.com/sites/archivedev/Shared%20Documents/Forms/AllItems.aspx?debugManifestsFile=https%3A%2F%2Flocalhost%3A4321%2Ftemp%2Fmanifests.js&loadSPFX=true&customActions=%7B%220f487797-52a2-41af-8f7b-1f357a2f8406%22%3A%7B%22location%22%3A%22ClientSideExtension.ListViewCommandSet.CommandBar%22%2C%22properties%22%3A%7B%22sampleTextOne%22%3A%22One+item+is+selected+in+the+list%22%2C%22sampleTextTwo%22%3A%22This+command+is+always+visible.%22%7D%7D%7D",
       "webRoot": "${workspaceRoot}",
       "sourceMaps": true,
       "sourceMapPathOverrides": {

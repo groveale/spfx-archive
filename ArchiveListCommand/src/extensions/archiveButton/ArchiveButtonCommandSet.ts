@@ -55,14 +55,14 @@ export default class ArchiveButtonCommandSet extends BaseListViewCommandSet<IArc
         const requestHeaders: Headers = new Headers();
         requestHeaders.append('Content-type', 'application/json');
 
-        // Fields are the visible fields in the list view (other fields are accessible)
+
         var fileName: string = this.context.listView.selectedRows[0].getValueByName("FileLeafRef")
         var serverRelativeUrlToFile: string = this.context.listView.selectedRows[0].getValueByName("FileRef")
         var pathToFile: string = serverRelativeUrlToFile.substring(this.context.pageContext.web.serverRelativeUrl.length)
         var pathToFolder: string = pathToFile.substring(0, pathToFile.length - fileName.length - 1)
         var uniqueIdValue: string = this.context.listView.selectedRows[0].getValueByName("UniqueId")
         var uniqueId: string = uniqueIdValue.substring(1, uniqueIdValue.length - 2)
-
+        var spItemUrl = this.context.listView.selectedRows[0].getValueByName(".spItemUrl")
 
         // need to pass all metadata really
 
@@ -77,7 +77,8 @@ export default class ArchiveButtonCommandSet extends BaseListViewCommandSet<IArc
           'modifiedBy': this.context.listView.selectedRows[0].getValueByName("Editor"),
           'uniqueId': uniqueId,
           'id': this.context.listView.selectedRows[0].getValueByName("ID"),
-          'identifier': encodeURIComponent(pathToFile.substring(1))
+          'identifier': encodeURIComponent(pathToFile.substring(1)),
+          'spItemUrl': spItemUrl
         });
 
         const httpClientOptions: IHttpClientOptions = {
@@ -140,4 +141,26 @@ export default class ArchiveButtonCommandSet extends BaseListViewCommandSet<IArc
     // You should call this.raiseOnChage() to update the command bar
     this.raiseOnChange();
   }
+
+  // private getFileId() {
+  //   // Replace the placeholder values with your own values
+  //   const siteUrl = 'https://contoso.sharepoint.com/sites/mysite';
+  //   const listId = '{list-guid}';
+  //   const itemId = '{item-id}';
+
+  //   fetch(`${siteUrl}/_api/web/lists(guid'${listId}')/items(${itemId})?$select=File/Id`, {
+  //     method: 'GET',
+  //     headers: {
+  //       'Accept': 'application/json;odata=verbose',
+  //     },
+  //   })
+  //     .then(response => response.json())
+  //     .then(data => {
+  //       const driveItemId = data.d.File.Id;
+  //       console.log(driveItemId);
+  //     })
+  //     .catch(error => console.error(error));
+
+      
+  //   }
 }
