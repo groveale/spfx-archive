@@ -20,7 +20,7 @@ namespace groveale
 
 
         public static string? _driveId {get;set;}
-        private static string? _itemId {get;set;}
+        public static string? _itemId {get;set;}
         private static string? _parentId {get;set;}
         public static string? _stubId {get;set;}
 
@@ -119,6 +119,14 @@ namespace groveale
             if (stub)
             {
                 fileName += ".url";
+            } 
+            else
+            {
+                // strip the .url
+                if (fileName.EndsWith(".url"))
+                {
+                    fileName = fileName.Substring(0, fileName.Length - 4);
+                }
             }
 
             // May need to create item first and then apply metadata 
@@ -126,10 +134,10 @@ namespace groveale
             {
                 Name = $"{fileName}",
                 File = new Microsoft.Graph.File { },
-                ListItem = new ListItem 
-                {
-                    AdditionalData = metadata
-                }
+                // ListItem = new ListItem 
+                // {
+                //     AdditionalData = metadata
+                // }
             };
 
             var newFile = await _appClient.Drives[_driveId].Items[_parentId].Children
@@ -144,10 +152,43 @@ namespace groveale
             return newFile;
         }
 
-        // public static async Task UploadContentFromAzure()
-        // {
 
-        // }
+        public static async Task UploadContentFromBlob(Stream blobStream, string newFileId)
+        {
+
+
+            // Create an upload session to add the contents of the file
+            var uploadSession = await _appClient.Drives[_driveId].Items[newFileId]
+                .CreateUploadSession(new DriveItemUploadableProperties())
+                .Request().PostAsync();
+
+            // Upload the contents of the file
+            var chunkSize = 320 * 1024;
+            var provider = new ChunkedUploadProvider(uploadSession, _appClient, blobStream, chunkSize);
+            var item = await provider.UploadAsync();
+
+
+            // using (var stream = new MemoryStream())
+            // {
+            //     await blobStream.CopyToAsync(stream);
+
+            //     var contentsAsBytes = stream.ToArray();
+
+            //     // Supports upto 4MB
+            //     var request =  _appClient.Drives[_driveId].Items[newFileId].Content.Request();
+            //     request.Headers.Add(new HeaderOption("Content-Type", "application/octet-stream"));
+    
+	        //     var newContentInItem = await request.PutAsync<DriveItem>(stream);
+
+            //     // larger files requires upload session
+            //     // https://learn.microsoft.com/en-us/graph/api/driveitem-createuploadsession?view=graph-rest-1.0
+                
+            //     var newLength = newContentInItem.Content.Length;
+
+            // }
+
+
+        }
         public static async Task DeleteItem()
         {
             // Ensure client isn't null

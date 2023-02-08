@@ -7,6 +7,7 @@ namespace groveale
         public string? ClientId { get; set; }
         public string? ClientSecret { get; set; }
         public string? TenantId { get; set; }
+        public string? StorageConnectionString {get;set;}
 
         public static Settings LoadSettings()
         {
@@ -15,6 +16,7 @@ namespace groveale
                 ClientId = Environment.GetEnvironmentVariable("clientId"),
                 ClientSecret = Environment.GetEnvironmentVariable("clientSecret"),
                 TenantId = Environment.GetEnvironmentVariable("tenantId"),
+                StorageConnectionString = Environment.GetEnvironmentVariable("StorageConnectionString"),
             };
         }
     }

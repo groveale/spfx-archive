@@ -18,15 +18,16 @@ namespace groveale
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req,
             ILogger log)
         {
-            var authHeader = req.Headers["Authorization"];
-            if (!authHeader.Any() || !authHeader[0].StartsWith("Bearer "))
-            {
-                return new UnauthorizedResult();
-            }
+            // var authHeader = req.Headers["Authorization"];
+            // if (!authHeader.Any() || !authHeader[0].StartsWith("Bearer "))
+            // {
+            //     return new UnauthorizedResult();
+            // }
 
             // Get query parameters for spItemUrl (contains the driveID and FileID)
             string spItemUrl = req.Query["spItemUrl"];
             string fileLeafRef = req.Query["fileLeafRef"];
+            string serverRelativeUrl = req.Query["serverRelativeUrl"];
 
             // Read request body and deserialize it
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
@@ -35,9 +36,10 @@ namespace groveale
             // Use query parameters or request body data for spItemUrl
             spItemUrl = spItemUrl ?? data?.spItemUrl;
             fileLeafRef = fileLeafRef ?? data?.fileLeafRef;
+            serverRelativeUrl = serverRelativeUrl ?? data?.serverRelativeUrl;
 
             // Extract the accessToken
-            var accessToken = authHeader[0].Substring("Bearer ".Length);
+            //var accessToken = authHeader[0].Substring("Bearer ".Length);
 
             try
             {
@@ -51,9 +53,11 @@ namespace groveale
                 var stub = await GraphHelper.CreateItem(metaData, fileLeafRef, stub: true);
 
                 // Get file content and create in Azure blob (using stub file id)
-                var containerClient = await AzureBlobHelper.CreateContainerAsync(GraphHelper._driveId);
+                var containerClient = await AzureBlobHelper.CreateContainerAsync(serverRelativeUrl, settings.StorageConnectionString);
                 var stream = await GraphHelper.GetFileStreamContent();
-                await AzureBlobHelper.UploadStream(containerClient, GraphHelper._stubId, stream);
+
+                var blobName = $"{GraphHelper._driveId}-{GraphHelper._stubId}";
+                await AzureBlobHelper.UploadStream(containerClient, blobName, stream);
 
                 // Delete file in SPO
                 await GraphHelper.DeleteItem();

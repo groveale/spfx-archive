@@ -17,14 +17,12 @@ namespace groveale
         // Create a container (SPO Site)
         // Container name is driveid
         //-------------------------------------------------
-        public static async Task<BlobContainerClient> CreateContainerAsync(string containerName)
+        public static async Task<BlobContainerClient> CreateContainerAsync(string containerName, string connectionString)
         {
-            // Get the connection string from app settings
-            string connectionString = ConfigurationManager.AppSettings["StorageConnectionString"];
 
             // Using SiteUrl for uniqueness
-            // The container name must be lowercase.
-            containerName = containerName.ToLowerInvariant();
+            // The container name must be lowercase and can only contain hypernymns.
+            containerName = containerName.Replace('/','-').ToLowerInvariant();
 
             try
             {
@@ -71,19 +69,21 @@ namespace groveale
         // Get a blob (stream)
         // blobName is filedriveid
         //-------------------------------------------------
-        public static async Task DownloadBlobContentToSteam(BlobContainerClient containerClient, string blobName, Stream spoStream)
+        public static async Task<Stream> DownloadBlobContentToSteam(BlobContainerClient containerClient, string blobName)
         {
             if (!await containerClient.ExistsAsync())
             {
                 Console.WriteLine("No Container");
-                return;
+                return null;
             }
 
              // Get a reference to the blob you want to download the content from
             BlobClient blobClient = containerClient.GetBlobClient(blobName);
             
-            // Download to the spo stream
-            await blobClient.DownloadToAsync(spoStream);
+            // Open a stream to the content
+            var blobStream = await blobClient.OpenReadAsync();
+
+            return blobStream;
         }
 
         //-------------------------------------------------

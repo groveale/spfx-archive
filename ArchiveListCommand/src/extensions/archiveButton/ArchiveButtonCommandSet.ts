@@ -41,6 +41,25 @@ export default class ArchiveButtonCommandSet extends BaseListViewCommandSet<IArc
   }
 
   public onExecute(event: IListViewCommandSetExecuteEventParameters): void {
+
+    var fileLeafRef: string = this.context.listView.selectedRows[0].getValueByName("FileLeafRef")
+    var spItemUrl = this.context.listView.selectedRows[0].getValueByName(".spItemUrl")
+    var serverRelativeUrl = this.context.listView.list.serverRelativeUrl
+
+    const requestHeaders: Headers = new Headers();
+    requestHeaders.append('Content-type', 'application/json');
+
+    const body: string = JSON.stringify({
+      'spItemUrl': spItemUrl,
+      'fileLeafRef': fileLeafRef,
+      'serverRelativeUrl': serverRelativeUrl
+    });
+
+    const httpClientOptions: IHttpClientOptions = {
+      body: body,
+      headers: requestHeaders
+    };
+
     switch (event.itemId) {
       // Archive
       case 'COMMAND_1':
@@ -51,47 +70,11 @@ export default class ArchiveButtonCommandSet extends BaseListViewCommandSet<IArc
         this.dialog.show();
         this.dialogOpen = true;
         
-
-        const requestHeaders: Headers = new Headers();
-        requestHeaders.append('Content-type', 'application/json');
-
-
-        var fileName: string = this.context.listView.selectedRows[0].getValueByName("FileLeafRef")
-        var serverRelativeUrlToFile: string = this.context.listView.selectedRows[0].getValueByName("FileRef")
-        var pathToFile: string = serverRelativeUrlToFile.substring(this.context.pageContext.web.serverRelativeUrl.length)
-        var pathToFolder: string = pathToFile.substring(0, pathToFile.length - fileName.length - 1)
-        var uniqueIdValue: string = this.context.listView.selectedRows[0].getValueByName("UniqueId")
-        var uniqueId: string = uniqueIdValue.substring(1, uniqueIdValue.length - 2)
-        var spItemUrl = this.context.listView.selectedRows[0].getValueByName(".spItemUrl")
-
-        // need to pass all metadata really
-
-        const body: string = JSON.stringify({
-          'siteUrl': this.context.pageContext.web.absoluteUrl,
-          'pathToFile': pathToFile,
-          'pathToFolder': pathToFolder,
-          'fileName': fileName,
-          'listTitle': this.context.listView.list.title,
-          'serverRelative': this.context.listView.list.serverRelativeUrl,
-          'modified': this.context.listView.selectedRows[0].getValueByName("Modified"),
-          'modifiedBy': this.context.listView.selectedRows[0].getValueByName("Editor"),
-          'uniqueId': uniqueId,
-          'id': this.context.listView.selectedRows[0].getValueByName("ID"),
-          'identifier': encodeURIComponent(pathToFile.substring(1)),
-          'spItemUrl': spItemUrl
-        });
-
-        const httpClientOptions: IHttpClientOptions = {
-          body: body,
-          headers: requestHeaders
-        };
-
         this.context.httpClient.post(
-          `https://prod-120.westeurope.logic.azure.com:443/workflows/b710d898532f43e98e3db6e7dd1fe72a/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=6Mh8Mv90jJstcRBJ5PJE0N5BHabxGd1LfYx5bc5l6Io`,
+          `http://localhost:7071/api/ArchiveFile`,
           HttpClient.configurations.v1, 
           httpClientOptions)
 
-      
         break;
       // Rehradte
       case 'COMMAND_2':
@@ -101,6 +84,14 @@ export default class ArchiveButtonCommandSet extends BaseListViewCommandSet<IArc
         this.dialog.message = "Rehydrating"
         this.dialog.show();
         this.dialogOpen = true;
+
+        
+        this.context.httpClient.post(
+          `http://localhost:7071/api/RehydrateFile`,
+          HttpClient.configurations.v1, 
+          httpClientOptions)
+
+
         break;
       default:
         throw new Error('Unknown command');
