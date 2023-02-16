@@ -90,7 +90,46 @@ namespace groveale
             return stream;
         }
 
-        public static async Task<IDictionary<string, object>> GetItemMetadata()
+
+        public static async Task<List<string>> GetListColumns()
+        {
+            // Ensure client isn't null
+            _ = _appClient ??
+                throw new System.NullReferenceException("Graph has not been initialized for app-only auth");
+
+            var columnsToRetrive = new List<String>();
+
+            var coloumns = await _appClient.Drives[_driveId].List.Columns
+                                .Request()
+                                .GetAsync();
+
+            foreach(var column in coloumns)
+            {
+                // If column is not read only then we need it
+                if (!column.ReadOnly.Value)
+                {
+                    if (column.Name == "FileLeafRef")
+                    {
+                        continue;
+                    }
+                    columnsToRetrive.Add(column.Name);
+                }
+                else
+                {
+                    // we also need created data, creator, modified data and modifier
+                    // May be a better way to get these
+                    // Which are read only coloumns
+                    // if (column.Name == "Created" || column.Name == "Modified" ||column.Name == "Editor" || column.Name == "Author")
+                    // {
+                    //     columnsToRetrive.Add(column.Name);
+                    // }
+                }
+            }
+
+            return columnsToRetrive;
+        }
+
+        public static async Task<IDictionary<string, object>> GetItemMetadata(List<string> columnsToRetrive)
         {
             // Ensure client isn't null
             _ = _appClient ??
@@ -101,12 +140,19 @@ namespace groveale
             // used for creating the stub / rehydrated file
             _parentId = listItem.ParentReference.Id;
 
-            foreach(var field in listItem.AdditionalData)
+            // Will need to make a list of all Non-custom or default fields
+            // Might work but would need to be kept uptodate when new features that require fields are released
+            Dictionary<string, object> fieldValues = new Dictionary<string, object>();
+            foreach(var field in listItem.Fields.AdditionalData)
             {
-                Console.WriteLine($"{field.Key}: {field.Value}");
+                if (columnsToRetrive.Contains(field.Key))
+                {
+                    Console.WriteLine($"{field.Key}: {field.Value}");
+                    fieldValues.Add(field.Key, field.Value);
+                }
             }
 
-            return listItem.AdditionalData;
+            return fieldValues;
         }
 
         public static async Task<DriveItem> CreateItem(IDictionary<string, object> metadata, string fileName, bool stub = true)
@@ -152,6 +198,22 @@ namespace groveale
             return newFile;
         }
 
+        public static async Task UpdateMetadata(IDictionary<string, object> metadata, string itemId)
+        {
+            // Ensure client isn't null
+            _ = _appClient ??
+                throw new System.NullReferenceException("Graph has not been initialized for app-only auth");
+
+            // Apply Metadata
+            var fieldValueSet = new FieldValueSet
+            {
+                AdditionalData = metadata
+            };
+
+            var updatedFile = await _appClient.Drives[_driveId].Items[itemId].ListItem.Fields
+                .Request()
+                .UpdateAsync(fieldValueSet);
+        }
 
         public static async Task UploadContentFromBlob(Stream blobStream, string newFileId)
         {

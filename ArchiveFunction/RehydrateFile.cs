@@ -56,7 +56,8 @@ namespace groveale
                 var blobStream = await AzureBlobHelper.DownloadBlobContentToSteam(containerClient, blobName);
 
                 // Get metadata from stub (url) apply metadata to SPO item
-                var metaData = await GraphHelper.GetItemMetadata();
+                var columnsToRetrieve = await GraphHelper.GetListColumns();
+                var metaData = await GraphHelper.GetItemMetadata(columnsToRetrieve);
                 var spoFile = await GraphHelper.CreateItem(metaData, fileLeafRef, stub: false);
 
                 // Upload content from blob stream to SPO Item
