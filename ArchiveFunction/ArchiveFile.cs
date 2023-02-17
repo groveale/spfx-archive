@@ -39,6 +39,8 @@ namespace groveale
             spItemUrl = spItemUrl ?? data?.spItemUrl;
             fileLeafRef = fileLeafRef ?? data?.fileLeafRef;
             serverRelativeUrl = serverRelativeUrl ?? data?.serverRelativeUrl;
+
+            // SPO data
             siteUrl = siteUrl ?? data?.siteUrl;
             fileRelativeUrl = fileRelativeUrl ?? data?.fileRelativeUrl;
 
@@ -67,15 +69,15 @@ namespace groveale
                 await GraphHelper.UpdateMetadata(metaData, stub.Id);
                 SPOFileHelper.UpdateReadOnlyMetaData(clientContext, $"{fileRelativeUrl}.url", readOnlyMetadata);
 
-                // // Get file content and create in Azure blob (using stub file id)
-                // var containerClient = await AzureBlobHelper.CreateContainerAsync(serverRelativeUrl, settings.StorageConnectionString);
-                // var stream = await GraphHelper.GetFileStreamContent();
+                // Get file content and create in Azure blob (using stub file id)
+                var containerClient = await AzureBlobHelper.CreateContainerAsync(serverRelativeUrl, settings.StorageConnectionString);
+                var stream = await GraphHelper.GetFileStreamContent();
 
-                // var blobName = $"{GraphHelper._driveId}-{GraphHelper._stubId}";
-                // await AzureBlobHelper.UploadStream(containerClient, blobName, stream);
+                var blobName = $"{GraphHelper._driveId}-{GraphHelper._stubId}";
+                await AzureBlobHelper.UploadStream(containerClient, blobName, stream);
 
-                // // Delete file in SPO
-                // await GraphHelper.DeleteItem();
+                // Delete file in SPO
+                await GraphHelper.DeleteItem();
 
                 // Return the active files count in response
                 return new OkObjectResult("Yay");
