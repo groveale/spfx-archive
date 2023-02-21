@@ -43,6 +43,7 @@ export default class ArchiveButtonCommandSet extends BaseListViewCommandSet<IArc
   public onExecute(event: IListViewCommandSetExecuteEventParameters): void {
 
     var fileLeafRef: string = this.context.listView.selectedRows[0].getValueByName("FileLeafRef")
+    var fileRef: string = this.context.listView.selectedRows[0].getValueByName("FileRef")
     var spItemUrl = this.context.listView.selectedRows[0].getValueByName(".spItemUrl")
     var serverRelativeUrl = this.context.listView.list.serverRelativeUrl
 
@@ -52,7 +53,9 @@ export default class ArchiveButtonCommandSet extends BaseListViewCommandSet<IArc
     const body: string = JSON.stringify({
       'spItemUrl': spItemUrl,
       'fileLeafRef': fileLeafRef,
-      'serverRelativeUrl': serverRelativeUrl
+      'serverRelativeUrl': serverRelativeUrl,
+      'siteUrl': this.context.pageContext.web.absoluteUrl,
+      'fileRelativeUrl': fileRef
     });
 
     const httpClientOptions: IHttpClientOptions = {
@@ -69,11 +72,8 @@ export default class ArchiveButtonCommandSet extends BaseListViewCommandSet<IArc
         this.dialog.message = "Archiving"
         this.dialog.show();
         this.dialogOpen = true;
-        
-        this.context.httpClient.post(
-          `http://localhost:7071/api/ArchiveFile`,
-          HttpClient.configurations.v1, 
-          httpClientOptions)
+
+        this.sendRequest(`https://ag-spfx-archive.azurewebsites.net/api/archivefile`, httpClientOptions)
 
         break;
       // Rehradte
@@ -85,17 +85,23 @@ export default class ArchiveButtonCommandSet extends BaseListViewCommandSet<IArc
         this.dialog.show();
         this.dialogOpen = true;
 
-        
-        this.context.httpClient.post(
-          `http://localhost:7071/api/RehydrateFile`,
-          HttpClient.configurations.v1, 
-          httpClientOptions)
-
+        this.sendRequest(`https://ag-spfx-archive.azurewebsites.net/api/rehydratefile`, httpClientOptions)
 
         break;
       default:
         throw new Error('Unknown command');
     }
+  }
+
+  private sendRequest(uri: string, httpClientOptions: IHttpClientOptions) : Promise<void> {
+    return this.context.httpClient.post(
+        uri,
+        HttpClient.configurations.v1, 
+        httpClientOptions)
+      .then(response => response.json())
+      .then(requestStatus => {
+        this.raiseOnChange();
+      });
   }
 
   private _onListViewStateChanged = (args: ListViewStateChangedEventArgs): void => {
