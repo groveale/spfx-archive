@@ -24,7 +24,7 @@ const LOG_SOURCE: string = 'ArchiveButtonCommandSet';
 
 export default class ArchiveButtonCommandSet extends BaseListViewCommandSet<IArchiveButtonCommandSetProperties> {
 
-  private dialogOpen: boolean = false
+  //private dialogOpen: boolean = false
   private dialog: SpinnerDialog = new SpinnerDialog ();
 
 
@@ -45,7 +45,7 @@ export default class ArchiveButtonCommandSet extends BaseListViewCommandSet<IArc
     var fileLeafRef: string = this.context.listView.selectedRows[0].getValueByName("FileLeafRef")
     var fileRef: string = this.context.listView.selectedRows[0].getValueByName("FileRef")
     var spItemUrl = this.context.listView.selectedRows[0].getValueByName(".spItemUrl")
-    var serverRelativeUrl = this.context.listView.list.serverRelativeUrl
+    var serverRelativeUrl = this.context.pageContext.web.serverRelativeUrl
 
     const requestHeaders: Headers = new Headers();
     requestHeaders.append('Content-type', 'application/json');
@@ -71,7 +71,7 @@ export default class ArchiveButtonCommandSet extends BaseListViewCommandSet<IArc
 
         this.dialog.message = "Archiving"
         this.dialog.show();
-        this.dialogOpen = true;
+        //this.dialogOpen = true;
 
         this.sendRequest(`https://ag-spfx-archive.azurewebsites.net/api/archivefile`, httpClientOptions)
 
@@ -83,7 +83,7 @@ export default class ArchiveButtonCommandSet extends BaseListViewCommandSet<IArc
         // });
         this.dialog.message = "Rehydrating"
         this.dialog.show();
-        this.dialogOpen = true;
+        //this.dialogOpen = true;
 
         this.sendRequest(`https://ag-spfx-archive.azurewebsites.net/api/rehydratefile`, httpClientOptions)
 
@@ -93,14 +93,18 @@ export default class ArchiveButtonCommandSet extends BaseListViewCommandSet<IArc
     }
   }
 
-  private sendRequest(uri: string, httpClientOptions: IHttpClientOptions) : Promise<void> {
-    return this.context.httpClient.post(
+  private async sendRequest(uri: string, httpClientOptions: IHttpClientOptions) : Promise<void> {
+    return await this.context.httpClient.post(
         uri,
         HttpClient.configurations.v1, 
         httpClientOptions)
-      .then(response => response.json())
-      .then(requestStatus => {
-        this.raiseOnChange();
+      //.then(response => response.json())
+      .then(response => {
+        console.log(response.status)
+        //this.dialogOpen = false;
+        this.dialog.close()
+        //this._onListViewStateChanged(new ListViewStateChangedEventArgs());
+        //location.reload();
       });
   }
 
@@ -127,37 +131,15 @@ export default class ArchiveButtonCommandSet extends BaseListViewCommandSet<IArc
     }
 
     // Refresh when link is added
-    if (this.dialogOpen && (args.prevState.rows.length < this.context.listView.rows.length))
-    {
-      // no need to refresh, just close dialogs
-      //location.reload()
-      this.dialogOpen = false;
-      this.dialog.close();
-    }
+    // if (this.dialogOpen && (args.prevState.rows.length < this.context.listView.rows.length))
+    // {
+    //   // no need to refresh, just close dialogs
+    //   //location.reload()
+    //   this.dialogOpen = false;
+    //   this.dialog.close();
+    // }
 
     // You should call this.raiseOnChage() to update the command bar
     this.raiseOnChange();
   }
-
-  // private getFileId() {
-  //   // Replace the placeholder values with your own values
-  //   const siteUrl = 'https://contoso.sharepoint.com/sites/mysite';
-  //   const listId = '{list-guid}';
-  //   const itemId = '{item-id}';
-
-  //   fetch(`${siteUrl}/_api/web/lists(guid'${listId}')/items(${itemId})?$select=File/Id`, {
-  //     method: 'GET',
-  //     headers: {
-  //       'Accept': 'application/json;odata=verbose',
-  //     },
-  //   })
-  //     .then(response => response.json())
-  //     .then(data => {
-  //       const driveItemId = data.d.File.Id;
-  //       console.log(driveItemId);
-  //     })
-  //     .catch(error => console.error(error));
-
-      
-  //   }
 }

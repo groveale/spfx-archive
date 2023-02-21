@@ -22,6 +22,10 @@ namespace groveale
 
             // Using SiteUrl for uniqueness
             // The container name must be lowercase and can only contain hypernymns.
+            if(containerName[0] == '/') 
+            {
+                containerName = containerName.Remove(0, 1);
+            }
             containerName = containerName.Replace('/','-').ToLowerInvariant();
 
             try
