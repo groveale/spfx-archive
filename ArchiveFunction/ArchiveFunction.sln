@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33213.308
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ArchiveFunction", "ArchiveFunction.csproj", "{79F6CA44-6FE3-480A-9518-A9B051DEFE3D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{79F6CA44-6FE3-480A-9518-A9B051DEFE3D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{79F6CA44-6FE3-480A-9518-A9B051DEFE3D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{79F6CA44-6FE3-480A-9518-A9B051DEFE3D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{79F6CA44-6FE3-480A-9518-A9B051DEFE3D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {5E674399-6635-4ACF-BDC3-AC5B01FC6A18}
+	EndGlobalSection
+EndGlobal
