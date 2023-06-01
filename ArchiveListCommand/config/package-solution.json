@@ -3,7 +3,7 @@
   "solution": {
     "name": "spfx-archive-client-side-solution",
     "id": "dda34266-5790-4ae4-870d-71bee954b002",
-    "version": "1.0.0.2",
+    "version": "1.0.0.3",
     "includeClientSideAssets": true,
     "skipFeatureDeployment": true,
     "isDomainIsolated": false,
@@ -30,7 +30,7 @@
         "title": "Application Extension - Deployment of custom action",
         "description": "Deploys a custom action with ClientSideComponentId association",
         "id": "488336b0-20ac-47dd-aa56-b40c5be2da5f",
-        "version": "1.0.0.2",
+        "version": "1.0.0.3",
         "assets": {
           "elementManifests": [
             "elements.xml",

@@ -9,8 +9,8 @@
         "0f487797-52a2-41af-8f7b-1f357a2f8406": {
           "location": "ClientSideExtension.ListViewCommandSet.CommandBar",
           "properties": {
-            "sampleTextOne": "One item is selected in the list",
-            "sampleTextTwo": "This command is always visible."
+            "archiveVersions": "true",
+            "archiveVersionCount": "10"
           }
         }
       }
@@ -21,8 +21,8 @@
         "0f487797-52a2-41af-8f7b-1f357a2f8406": {
           "location": "ClientSideExtension.ListViewCommandSet.CommandBar",
           "properties": {
-            "sampleTextOne": "One item is selected in the list",
-            "sampleTextTwo": "This command is always visible."
+            "archiveVersions": "false",
+            "archiveVersionCount": "5"
           }
         }
       }

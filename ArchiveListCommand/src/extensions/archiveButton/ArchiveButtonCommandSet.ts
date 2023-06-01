@@ -15,8 +15,8 @@ import SpinnerDialog from './ProgressSpinner';
  */
 export interface IArchiveButtonCommandSetProperties {
   // This is an example; replace with your own properties
-  sampleTextOne: string;
-  sampleTextTwo: string;
+  archiveVersions: string;
+  archiveVersionCount: string;
   endPointUrl: string
 }
 
@@ -30,6 +30,12 @@ export default class ArchiveButtonCommandSet extends BaseListViewCommandSet<IArc
 
   public onInit(): Promise<void> {
     Log.info(LOG_SOURCE, 'Initialized ArchiveButtonCommandSet');
+
+    const archiveVersionsProp: string = this.properties.archiveVersions;
+    const archiveVersionCountProp: string = this.properties.archiveVersionCount;
+
+    console.log("Archive Versions: " + archiveVersionsProp)
+    console.log("Archive Version Count: " + archiveVersionCountProp)
 
     // initial state of the command's visibility
     const compareOneCommand: Command = this.tryGetCommand('COMMAND_1');
@@ -55,8 +61,12 @@ export default class ArchiveButtonCommandSet extends BaseListViewCommandSet<IArc
       'fileLeafRef': fileLeafRef,
       'serverRelativeUrl': serverRelativeUrl,
       'siteUrl': this.context.pageContext.web.absoluteUrl,
-      'fileRelativeUrl': fileRef
+      'fileRelativeUrl': fileRef,
+      'archiveVersions': this.properties.archiveVersions,
+      'archiveVersionCount': this.properties.archiveVersionCount
     });
+
+    console.log(body)
 
     const httpClientOptions: IHttpClientOptions = {
       body: body,
@@ -73,7 +83,9 @@ export default class ArchiveButtonCommandSet extends BaseListViewCommandSet<IArc
         this.dialog.show();
         //this.dialogOpen = true;
 
+        
         this.sendRequest(`https://ag-spfx-archive.azurewebsites.net/api/archivefile`, httpClientOptions)
+        //this.sendRequest(`https://archivingfunctionapp18.azurewebsites.net/api/archivefile`, httpClientOptions)
 
         break;
       // Rehradte
@@ -86,6 +98,7 @@ export default class ArchiveButtonCommandSet extends BaseListViewCommandSet<IArc
         //this.dialogOpen = true;
 
         this.sendRequest(`https://ag-spfx-archive.azurewebsites.net/api/rehydratefile`, httpClientOptions)
+        //this.sendRequest(`https://archivingfunctionapp18.azurewebsites.net/api/rehydratefile`, httpClientOptions)
 
         break;
       default:
@@ -113,6 +126,12 @@ export default class ArchiveButtonCommandSet extends BaseListViewCommandSet<IArc
 
     // reload the page
     console.log("LISTVIEW: " + args.stateChanges)
+
+    const archiveVersionsProp: string = this.properties.archiveVersions;
+    const archiveVersionCountProp: string = this.properties.archiveVersionCount;
+
+    console.log("Archive Versions: " + archiveVersionsProp)
+    console.log("Archive Version Count: " + archiveVersionCountProp)
     
 
     const compareOneCommand: Command = this.tryGetCommand('COMMAND_1');

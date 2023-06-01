@@ -23,7 +23,7 @@ The solution contains five components:
 * Azure Storage Account     (Storage tier)
 * Key Vault                 (Certificate storage)
 
-The front end to the solution could easily be swapped out to something else, a script, a bot even a PowerAutoamte trigger. The SPFx List extension simply posts a data payload to the Azure Function to identify the file that should be archived.
+The front end to the solution could easily be swapped out to something else, a script, a bot even a PowerAutoamte trigger. The SPFx List extension simply posts a data payload to the Azure Function to identify the file that should be archived. Anything that can replicate this functionality can be used.
 
 ## App Registration
 
@@ -38,6 +38,11 @@ These permission provide the Azure Function the ability to read, created and del
 
 A certificate is used by the Azure Function to create a context / connection using the app registration. The certificates public key must be uploaded to the App registration.
 
+The certificate is stored in the Key Vault, the Azure Function (API) requests the function from the Key Vault. Which it uses when creating connections context to SPO and MSGraph
+
 ## SPFx ListView Extension
 
+SharePoint Framework (SPFx) is a modern development model and set of tools provided by Microsoft for creating customizations and solutions for SharePoint. It allows you to build web parts, extensions, and other custom components using popular web technologies like TypeScript, JavaScript, HTML, and CSS. SPFx offers improved performance, easy integration with Microsoft services, and flexible deployment options, making it a powerful and modern way to extend and customize SharePoint.
+
+A ListView extension, also known as a ListViewCommandSet, is a type of SharePoint Framework (SPFx) extension that allows you to customize the command bar and context menu of a SharePoint list or library. By creating a ListView extension, you can add custom actions, buttons, and menu items to enhance the user experience and provide additional functionality when working with list items or documents. ListView extensions are client-side components that are rendered within the SharePoint interface, providing a seamless and integrated customization experience.
 

@@ -31,6 +31,8 @@ namespace groveale
             string serverRelativeUrl = req.Query["serverRelativeUrl"];
             string siteUrl = req.Query["siteUrl"];
             string fileRelativeUrl = req.Query["fileRelativeUrl"];
+            string archiveVersions = req.Query["archiveVersions"];
+            string archiveVersionCount = req.Query["archiveVersionCount"];
 
             // Read request body and deserialize it
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
@@ -44,6 +46,10 @@ namespace groveale
             // SPO data
             siteUrl = siteUrl ?? data?.siteUrl;
             fileRelativeUrl = fileRelativeUrl ?? data?.fileRelativeUrl;
+
+            // Archive data
+            archiveVersions = archiveVersions ?? data?.archiveVersions;
+            archiveVersionCount = archiveVersionCount ?? data?.archiveVersionCount;
 
             // Extract the accessToken
             //var accessToken = authHeader[0].Substring("Bearer ".Length);
@@ -64,7 +70,7 @@ namespace groveale
                 // Get file content from Blob storage and create in SPO
                 var containerClient = await AzureBlobHelper.CreateContainerAsync(serverRelativeUrl, settings.StorageConnectionString);
                 var blobName = $"{GraphHelper._driveId}-{GraphHelper._itemId}";
-                var blobStream = await AzureBlobHelper.DownloadBlobContentToSteam(containerClient, blobName);
+                var orderedblobStreams = await AzureBlobHelper.DownloadBlobContentToSteam(containerClient, blobName);
 
                 // Get metadata from stub (url) apply metadata to SPO item
                 var columnsToRetrieve = await GraphHelper.GetListColumns();
@@ -72,14 +78,19 @@ namespace groveale
                 var spoFile = await GraphHelper.CreateItem(metaData, fileLeafRef, stub: false);
 
                 
+                // Will need to update metadata for each version otherwise dates won't match up
+                foreach(var versionStream in orderedblobStreams)
+                {
+                    // Upload content from blob stream to SPO Item
+                    await GraphHelper.UploadContentFromBlob(versionStream, spoFile.Id);
+                    // Need to update the metadata post upload. Otherwise modified times get overwritten
+                    await GraphHelper.UpdateMetadata(metaData, spoFile.Id);
+                    // Strip off the _archive.txt to get the original file name
+                    SPOFileHelper.UpdateReadOnlyMetaData(clientContext, $"{fileRelativeUrl.Substring(0, fileRelativeUrl.Length - 12)}", readOnlyMetadata);
+                }
                 
-                // Upload content from blob stream to SPO Item
-                await GraphHelper.UploadContentFromBlob(blobStream, spoFile.Id);
 
-                // Need to update the metadata post upload. Otherwise modified times get overwritten
-                await GraphHelper.UpdateMetadata(metaData, spoFile.Id);
-                // Strip off the .url to get the original file name
-                SPOFileHelper.UpdateReadOnlyMetaData(clientContext, $"{fileRelativeUrl.Substring(0, fileRelativeUrl.Length - 4)}", readOnlyMetadata);
+                
 
 
                 // Delete Stub, delete blob

@@ -3,6 +3,8 @@ using Microsoft.Graph;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace groveale
@@ -79,15 +81,38 @@ namespace groveale
         }
     
 
-        public static async Task<Stream> GetFileStreamContent()
+        public static async Task<List<Stream>> GetFileStreamContent(string archiveVersions, string archiveVersionCount)
         {
             // Ensure client isn't null
             _ = _appClient ??
                 throw new System.NullReferenceException("Graph has not been initialized for app-only auth");
 
-            var stream = await _appClient.Drives[_driveId].Items[_itemId].Content.Request().GetAsync();
+            if (archiveVersions == "true")
+            {
+                // Get all versions of the file
+                var versions = await _appClient.Drives[_driveId].Items[_itemId].Versions.Request().GetAsync();
 
-            return stream;
+                // Get the latest versions N versions
+                var latestNVersions = versions.Take(Int32.Parse(archiveVersionCount)).ToList();
+
+                var versionStreams = new List<Stream>();
+                foreach (var version in latestNVersions)
+                {
+                    // Get the content stream
+                    var stream = await _appClient.Drives[_driveId].Items[_itemId].Versions[version.Id].Content.Request().GetAsync();
+                    versionStreams.Add(stream);
+                }
+                
+                return versionStreams;
+            }
+            else
+            {
+                // Just get the file
+                var stream = await _appClient.Drives[_driveId].Items[_itemId].Content.Request().GetAsync();
+
+                // Only need one stream
+                return new List<Stream>(){ stream };
+            }
         }
 
 
@@ -164,14 +189,14 @@ namespace groveale
             // stubs are links
             if (stub)
             {
-                fileName += ".url";
+                fileName += "_archive.txt";
             } 
             else
             {
                 // strip the .url
-                if (fileName.EndsWith(".url"))
+                if (fileName.EndsWith("_archive.txt"))
                 {
-                    fileName = fileName.Substring(0, fileName.Length - 4);
+                    fileName = fileName.Substring(0, fileName.Length - 12);
                 }
             }
 
@@ -180,6 +205,12 @@ namespace groveale
             {
                 Name = $"{fileName}",
                 File = new Microsoft.Graph.File { },
+                // set content of file to "hello"
+                Content = new MemoryStream(Encoding.UTF8.GetBytes(@$"This file is currently in the archive.{Environment.NewLine}
+                                                                {Environment.NewLine}
+                                                                Click the following link to learn how to Rehydrate
+                                                                {Environment.NewLine}
+                                                                {_settings.LinkToKB}")),
                 // ListItem = new ListItem 
                 // {
                 //     AdditionalData = metadata
@@ -217,7 +248,6 @@ namespace groveale
 
         public static async Task UploadContentFromBlob(Stream blobStream, string newFileId)
         {
-
 
             // Create an upload session to add the contents of the file
             var uploadSession = await _appClient.Drives[_driveId].Items[newFileId]

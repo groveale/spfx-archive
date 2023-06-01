@@ -32,3 +32,6 @@ obj
 
 # Styles Generated Code
 *.scss.ts
+ArchiveFunction/__azurite_db_blob__.json
+ArchiveFunction/__azurite_db_blob_extent__.json
+ArchiveFunction/__blobstorage__/7ee44218-190c-4a39-a894-4ca5f027003c

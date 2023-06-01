@@ -16,6 +16,7 @@ local.settings.json
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
+[Pp]ublished/
 [Rr]elease/
 [Rr]eleases/
 x64/
