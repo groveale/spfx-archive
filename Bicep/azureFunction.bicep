@@ -4,8 +4,8 @@ param functionAppName string = 'function${uniqueString(resourceGroup().id)}'
 param hostingPlanName string = 'function${uniqueString(resourceGroup().id)}'
 param applicationInsightsName string = 'function${uniqueString(resourceGroup().id)}'
 param repoUrl string = 'https://github.com/groveale/spfx-archive/tree/master/ArchiveFunction'
-param branch string = 'master'
-param packageUri string = ''
+param branch string = 'main'
+param packageUri string = 'https://github.com/groveale/spfx-archive/raw/master/ArchiveFunction/achiveFunction.zip'
 
 @allowed([
   'nonprod'
@@ -93,10 +93,28 @@ resource functionApp 'Microsoft.Web/sites@2022-03-01' = {
           value: 'dotnet'
         }
         {
-          name: 'Project'
-          value: 'ArchiveFunction\\ArchiveFunction.csproj'
+          name: 'WEBSITE_RUN_FROM_PACKAGE'
+          value: '0'
         }
       ]
     }
+  }
+}
+
+// resource sourcecontrol 'Microsoft.Web/sites/sourcecontrols@2022-03-01' = {
+//   parent: functionApp
+//   name: 'web'
+//   properties: {
+//     repoUrl: repoUrl
+//     branch: branch
+//     isManualIntegration: true
+//   }
+// }
+
+resource zipDeploy 'Microsoft.Web/sites/extensions@2021-02-01' = {
+  parent: functionApp
+  name: 'MSDeploy'
+  properties: {
+    packageUri: packageUri
   }
 }
