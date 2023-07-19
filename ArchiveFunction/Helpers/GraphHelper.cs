@@ -87,32 +87,36 @@ namespace groveale
             _ = _appClient ??
                 throw new System.NullReferenceException("Graph has not been initialized for app-only auth");
 
+            var versionStreams = new List<Stream>();
+
+            // Get the active file 
+            var activeStream = await _appClient.Drives[_driveId].Items[_itemId].Content.Request().GetAsync();
+            versionStreams.Add(activeStream);
+
             if (archiveVersions == "true")
             {
+                string[] selectProperties = { "id" }; 
+
                 // Get all versions of the file
-                var versions = await _appClient.Drives[_driveId].Items[_itemId].Versions.Request().GetAsync();
+                var versions = await _appClient.Drives[_driveId].Items[_itemId].Versions
+                    .Request()
+                    .Select(string.Join(",", selectProperties))
+                    .GetAsync();
 
                 // Get the latest versions N versions
                 var latestNVersions = versions.Take(Int32.Parse(archiveVersionCount)).ToList();
-
-                var versionStreams = new List<Stream>();
+                // Remove the latest version as we already have it
+                latestNVersions.RemoveAt(0);
+ 
                 foreach (var version in latestNVersions)
                 {
                     // Get the content stream
-                    var stream = await _appClient.Drives[_driveId].Items[_itemId].Versions[version.Id].Content.Request().GetAsync();
-                    versionStreams.Add(stream);
+                    var versionStream = await _appClient.Drives[_driveId].Items[_itemId].Versions[version.Id].Content.Request().GetAsync();
+                    versionStreams.Add(versionStream);
                 }
-                
-                return versionStreams;
             }
-            else
-            {
-                // Just get the file
-                var stream = await _appClient.Drives[_driveId].Items[_itemId].Content.Request().GetAsync();
-
-                // Only need one stream
-                return new List<Stream>(){ stream };
-            }
+           
+            return versionStreams;
         }
 
 
@@ -206,11 +210,11 @@ namespace groveale
                 Name = $"{fileName}",
                 File = new Microsoft.Graph.File { },
                 // set content of file to "hello"
-                Content = new MemoryStream(Encoding.UTF8.GetBytes(@$"This file is currently in the archive.{Environment.NewLine}
-                                                                {Environment.NewLine}
-                                                                Click the following link to learn how to Rehydrate
-                                                                {Environment.NewLine}
-                                                                {_settings.LinkToKB}")),
+                // Content = new MemoryStream(Encoding.UTF8.GetBytes(@$"This file is currently in the archive.{Environment.NewLine}
+                //                                                 {Environment.NewLine}
+                //                                                 Click the following link to learn how to Rehydrate
+                //                                                 {Environment.NewLine}
+                //                                                 {_settings.LinkToKB}")),
                 // ListItem = new ListItem 
                 // {
                 //     AdditionalData = metadata
@@ -229,6 +233,24 @@ namespace groveale
             return newFile;
         }
 
+        public static async Task UpdateStubContent(string itemId)
+        {
+            // Sample text
+            string textContent = @$"This file is currently in the archive.{Environment.NewLine}Click the following link to learn how to Rehydrate{Environment.NewLine}{_settings.LinkToKB}";
+
+            // Convert the text to a byte array using UTF-8 encoding
+            byte[] byteArray = Encoding.UTF8.GetBytes(textContent);
+
+            // Create a Stream from the byte array
+            using (Stream content = new MemoryStream(byteArray))
+            {
+                var updatedContent = await _appClient.Drives[_driveId].Items[itemId].Content
+                    .Request()
+                    .PutAsync<DriveItem>(content);
+            }
+            
+        }
+
         public static async Task UpdateMetadata(IDictionary<string, object> metadata, string itemId)
         {
             // Ensure client isn't null
@@ -244,6 +266,7 @@ namespace groveale
             var updatedFile = await _appClient.Drives[_driveId].Items[itemId].ListItem.Fields
                 .Request()
                 .UpdateAsync(fieldValueSet);
+
         }
 
         public static async Task UploadContentFromBlob(Stream blobStream, string newFileId)
@@ -281,15 +304,43 @@ namespace groveale
 
 
         }
-        public static async Task DeleteItem()
+        public static async Task<long> DeleteItem(bool getSizeSaved)
         {
             // Ensure client isn't null
             _ = _appClient ??
                 throw new System.NullReferenceException("Graph has not been initialized for app-only auth");
 
+            long bytesSaved = 0;
+
+            if (getSizeSaved)
+            {
+                 List<DriveItemVersion> allVersions = new List<DriveItemVersion>();
+
+                // The maximum number of items to retrieve in a single request.
+                int pageSize = 100;
+                string[] selectProperties = { "id", "size" }; 
+
+                IDriveItemVersionsCollectionPage versionsPage;
+
+                do
+                {
+                    versionsPage = await _appClient.Drives[_driveId].Items[_itemId].Versions
+                        .Request()
+                        .Select(string.Join(",", selectProperties))
+                        .Top(pageSize)
+                        .GetAsync();
+
+                    allVersions.AddRange(versionsPage.CurrentPage);
+
+                } while (versionsPage.NextPageRequest != null && (versionsPage = await versionsPage.NextPageRequest.GetAsync()) != null);
+
+                bytesSaved = allVersions.Sum(v => v.Size.Value);
+            }
+
 
             await _appClient.Drives[_driveId].Items[_itemId].Request().DeleteAsync();
         
+            return bytesSaved;
         }
     }
 }

@@ -21,6 +21,7 @@ export interface IArchiveButtonCommandSetProperties {
 }
 
 const LOG_SOURCE: string = 'ArchiveButtonCommandSet';
+const ARCHIVE_METHOD: string = 'SelfService';
 
 export default class ArchiveButtonCommandSet extends BaseListViewCommandSet<IArchiveButtonCommandSetProperties> {
 
@@ -63,7 +64,10 @@ export default class ArchiveButtonCommandSet extends BaseListViewCommandSet<IArc
       'siteUrl': this.context.pageContext.web.absoluteUrl,
       'fileRelativeUrl': fileRef,
       'archiveVersions': this.properties.archiveVersions,
-      'archiveVersionCount': this.properties.archiveVersionCount
+      'archiveVersionCount': this.properties.archiveVersionCount,
+      'archiveMethod': ARCHIVE_METHOD,
+      'archiveUserEmail': this.context.pageContext.user.email,
+      'associatedLabel': 'todo'
     });
 
     console.log(body)
@@ -83,7 +87,7 @@ export default class ArchiveButtonCommandSet extends BaseListViewCommandSet<IArc
         this.dialog.show();
         //this.dialogOpen = true;
 
-        
+        //this.sendRequest(`http://localhost:7071/api/ArchiveFile`, httpClientOptions)
         this.sendRequest(`https://ag-spfx-archive.azurewebsites.net/api/archivefile`, httpClientOptions)
         //this.sendRequest(`https://archivingfunctionapp18.azurewebsites.net/api/archivefile`, httpClientOptions)
 

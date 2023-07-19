@@ -4,7 +4,7 @@
   "https": true,
   "serveConfigurations": {
     "default": {
-      "pageUrl": "https://groverale.sharepoint.com/sites/home/demoDocs/Forms/AllItems.aspx",
+      "pageUrl": "https://groverale.sharepoint.com/sites/archivedev/AchiveRevive/Forms/AllItems.aspx",
       "customActions": {
         "0f487797-52a2-41af-8f7b-1f357a2f8406": {
           "location": "ClientSideExtension.ListViewCommandSet.CommandBar",
@@ -16,7 +16,7 @@
       }
     },
     "archiveButton": {
-      "pageUrl": "https://groverale.sharepoint.com/sites/home/demoDocs/Forms/AllItems.aspx",
+      "pageUrl": "https://groverale.sharepoint.com/sites/archivedev/AchiveRevive/Forms/AllItems.aspx",
       "customActions": {
         "0f487797-52a2-41af-8f7b-1f357a2f8406": {
           "location": "ClientSideExtension.ListViewCommandSet.CommandBar",

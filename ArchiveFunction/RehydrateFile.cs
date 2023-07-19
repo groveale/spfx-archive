@@ -94,7 +94,7 @@ namespace groveale
 
 
                 // Delete Stub, delete blob
-                await GraphHelper.DeleteItem();
+                await GraphHelper.DeleteItem(false);
                 await AzureBlobHelper.DeleteBlob(containerClient, blobName);
 
                 // Return the active files count in response

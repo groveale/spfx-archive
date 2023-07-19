@@ -5,6 +5,7 @@ using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
 using Microsoft.Identity.Client;
 using Microsoft.SharePoint.Client;
+using PnP.Framework;
 
 namespace groveale
 {
@@ -23,6 +24,7 @@ namespace groveale
         {
             //string clientId = "4d3e3609-0313-4bf8-8b07-17d228f98808"; //e.g. 01e54f9a-81bc-4dee-b15d-e661ae13f382
             string clientId = Environment.GetEnvironmentVariable("clientId");
+            string clientSecret = Environment.GetEnvironmentVariable("clientSecret");
             
 
             //string certThumprint = "158E6A5066973CA9F6AE580B783967B1EFCC56C8"; // e.g. CE20E000D53A4C968ED8BA3EFC92C40A2692AE98
@@ -37,9 +39,13 @@ namespace groveale
             //string tenantId = "groverale.onmicrosoft.com";
             string tenantId = Environment.GetEnvironmentVariable("tenantId");
 
-            var accessToken = await GetApplicationAuthenticatedClient(clientId, certThumprint, scopes, tenantId);
 
-            this.clientContext = GetClientContextWithAccessToken(this.siteUrl, accessToken);
+            this.clientContext = new AuthenticationManager()
+                .GetACSAppOnlyContext(this.siteUrl, clientId, clientSecret);
+
+            // var accessToken = await GetApplicationAuthenticatedClient(clientId, certThumprint, scopes, tenantId);
+
+            // this.clientContext = GetClientContextWithAccessToken(this.siteUrl, accessToken);
             return this.clientContext;
         }
 
@@ -61,6 +67,7 @@ namespace groveale
                                             .Create(clientId)
                                             //.WithClientSecret(certThumprint)
                                             .WithCertificate(certificate)
+                                            .WithAuthority(new Uri($"https://login.microsoftonline.com/{tenantId}"))
                                             .WithTenantId(tenantId)
                                             .Build();
 
@@ -92,6 +99,8 @@ namespace groveale
 
             return new X509Certificate2(Convert.FromBase64String(secret.Value), string.Empty, X509KeyStorageFlags.MachineKeySet);
         }
+
+        
 
 
         private X509Certificate2 GetAppOnlyCertificate(string thumbPrint)

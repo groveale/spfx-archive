@@ -32,6 +32,9 @@ namespace groveale
             string fileRelativeUrl = req.Query["fileRelativeUrl"];
             string archiveVersions = req.Query["archiveVersions"];
             string archiveVersionCount = req.Query["archiveVersionCount"];
+            string archiveMethod = req.Query["archiveMethod"];
+            string archiveUserEmail = req.Query["archiveUserEmail"];
+            string associatedLabel = req.Query["associatedLabel"];
 
             // Read request body and deserialize it
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
@@ -50,6 +53,10 @@ namespace groveale
             archiveVersions = archiveVersions ?? data?.archiveVersions;
             archiveVersionCount = archiveVersionCount ?? data?.archiveVersionCount; 
 
+            // Log data
+            archiveMethod = archiveMethod ?? data?.archiveMethod;
+            archiveUserEmail = archiveUserEmail ?? data?.archiveUserEmail;
+
             // Extract the accessToken
             //var accessToken = authHeader[0].Substring("Bearer ".Length);
 
@@ -63,16 +70,21 @@ namespace groveale
                 var SPOAuthHelper = new SPOAuthHelper(siteUrl);
                 var clientContext = await SPOAuthHelper.Init();
 
+                // Get the site name to prove we have SPO auth
+                clientContext.Load(clientContext.Web, w => w.Title);
+                clientContext.ExecuteQuery();
+                Console.WriteLine($"Site name: {clientContext.Web.Title}");
+
                 var readOnlyMetadata = SPOFileHelper.GetReadOnlyMetaDataSPO(clientContext, fileRelativeUrl);
 
                 // Get metadata content and create stub in SPO (.url)
                 var columnsToRetrieve = await GraphHelper.GetListColumns();
                 var metaData = await GraphHelper.GetItemMetadata(columnsToRetrieve);
 
-                
-                
                 var stub = await GraphHelper.CreateItem(metaData, fileLeafRef, stub: true);
+                await GraphHelper.UpdateStubContent(stub.Id);
                 await GraphHelper.UpdateMetadata(metaData, stub.Id);
+
                 SPOFileHelper.UpdateReadOnlyMetaData(clientContext, $"{fileRelativeUrl}_archive.txt", readOnlyMetadata);
 
                 // Get file content and create in Azure blob (using stub file id)
@@ -84,7 +96,10 @@ namespace groveale
                 await AzureBlobHelper.UploadStream(containerClient, blobName, listOfStreams);
 
                 // Delete file in SPO
-                await GraphHelper.DeleteItem();
+                var bytesSaved = await GraphHelper.DeleteItem(getSizeSaved: true);
+
+                // Log details in SPOList
+                var success = await SPOLogHelper.LogArchiveDetails(settings, spItemUrl, archiveMethod, stub.WebUrl, bytesSaved, listOfStreams.Count, archiveUserEmail);                
 
                 // Return the active files count in response
                 return new OkObjectResult("Yay");
