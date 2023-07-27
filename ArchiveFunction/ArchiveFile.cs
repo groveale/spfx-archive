@@ -95,11 +95,15 @@ namespace groveale
                 
                 await AzureBlobHelper.UploadStream(containerClient, blobName, listOfStreams);
 
+                // Build Blob URI
+                // https://azureachivegen2.blob.core.windows.net/sites-archivedev/b!WfqaZ0NAkUeFmlS3n6LyFylhyrNUJcxOhCZ5iI92GLE769AhxyQiRr731FN_EAJo-01WYN5PQKX572V653T7RCJXQKOV43UCEDM
+                var blobUri = $"{containerClient.Uri}/{blobName}";
+
                 // Delete file in SPO
                 var bytesSaved = await GraphHelper.DeleteItem(getSizeSaved: true);
 
                 // Log details in SPOList
-                var success = await SPOLogHelper.LogArchiveDetails(settings, spItemUrl, archiveMethod, stub.WebUrl, bytesSaved, listOfStreams.Count, archiveUserEmail);                
+                var success = await SPOLogHelper.LogArchiveDetails(settings, spItemUrl, archiveMethod, stub.WebUrl, bytesSaved, listOfStreams.Count, archiveUserEmail, siteUrl, blobUri, "Archive");
 
                 // Return the active files count in response
                 return new OkObjectResult("Yay");

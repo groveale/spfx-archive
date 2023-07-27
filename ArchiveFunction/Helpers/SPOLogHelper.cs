@@ -6,7 +6,7 @@ namespace groveale
 {
     public static class SPOLogHelper
     {
-        public static async Task<bool> LogArchiveDetails(Settings settings, string sourceUrl, string archiveMethod, string destinationUrl, long bytesSaved, int versionCountArchived, string archiveUserEmail)
+        public static async Task<bool> LogArchiveDetails(Settings settings, string sourceUrl, string archiveMethod, string destinationUrl, long bytesSaved, int versionCountArchived, string archiveUserEmail, string siteUrl, string blobUri, string actionType)
         {
             try 
             {
@@ -23,9 +23,12 @@ namespace groveale
                 listItem["SourceUrl"] = sourceUrl;
                 listItem["ArchiveMethod"] = archiveMethod;
                 listItem["DestinationUrl"] = destinationUrl;
-                listItem["BytesSaved"] = bytesSaved;
+                listItem["StorageSavedBytes"] = bytesSaved;
                 listItem["VersionCountArchived"] = versionCountArchived;
                 listItem["ArchiveUser"] = GetUserFieldValue(clientContext, archiveUserEmail);
+                listItem["SiteUrl"] = siteUrl;
+                listItem["ArchiveUrl"] = blobUri;
+                listItem["ActionType"] = actionType;
 
                 // Commit changes to SharePoint
                 listItem.Update();
@@ -41,6 +44,9 @@ namespace groveale
                 return false;
             }
         }
+
+
+
 
         // Helper method to get a FieldUserValue object for a specific user login name
         private static FieldUserValue GetUserFieldValue(ClientContext context, string userLoginName)

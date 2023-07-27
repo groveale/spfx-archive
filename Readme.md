@@ -46,3 +46,7 @@ SharePoint Framework (SPFx) is a modern development model and set of tools provi
 
 A ListView extension, also known as a ListViewCommandSet, is a type of SharePoint Framework (SPFx) extension that allows you to customize the command bar and context menu of a SharePoint list or library. By creating a ListView extension, you can add custom actions, buttons, and menu items to enhance the user experience and provide additional functionality when working with list items or documents. ListView extensions are client-side components that are rendered within the SharePoint interface, providing a seamless and integrated customization experience.
 
+[13:52] Gupta, Vikas
+
+
+vk_8Q~dRNmxpK4ZBKMMc.Nj3aj~oJXlvCc1.7a1Q

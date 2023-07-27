@@ -164,7 +164,9 @@ namespace groveale
             _ = _appClient ??
                 throw new System.NullReferenceException("Graph has not been initialized for app-only auth");
 
+            // For some reason the list item cannot be retrieved from the drive item
             var listItem = await _appClient.Drives[_driveId].Items[_itemId].ListItem.Request().GetAsync();
+
 
             // used for creating the stub / rehydrated file
             _parentId = listItem.ParentReference.Id;
@@ -269,7 +271,7 @@ namespace groveale
 
         }
 
-        public static async Task UploadContentFromBlob(Stream blobStream, string newFileId)
+        public static async Task<long> UploadContentFromBlob(Stream blobStream, string newFileId)
         {
 
             // Create an upload session to add the contents of the file
@@ -281,7 +283,8 @@ namespace groveale
             var chunkSize = 320 * 1024;
             var provider = new ChunkedUploadProvider(uploadSession, _appClient, blobStream, chunkSize);
             var item = await provider.UploadAsync();
-
+            
+            return item.Size.Value;
 
             // using (var stream = new MemoryStream())
             // {
@@ -342,5 +345,6 @@ namespace groveale
         
             return bytesSaved;
         }
+    
     }
 }

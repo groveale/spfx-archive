@@ -33,6 +33,9 @@ namespace groveale
             string fileRelativeUrl = req.Query["fileRelativeUrl"];
             string archiveVersions = req.Query["archiveVersions"];
             string archiveVersionCount = req.Query["archiveVersionCount"];
+            string archiveMethod = req.Query["archiveMethod"];
+            string archiveUserEmail = req.Query["archiveUserEmail"];
+            string associatedLabel = req.Query["associatedLabel"];
 
             // Read request body and deserialize it
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
@@ -50,6 +53,10 @@ namespace groveale
             // Archive data
             archiveVersions = archiveVersions ?? data?.archiveVersions;
             archiveVersionCount = archiveVersionCount ?? data?.archiveVersionCount;
+
+            // Log data
+            archiveMethod = archiveMethod ?? data?.archiveMethod;
+            archiveUserEmail = archiveUserEmail ?? data?.archiveUserEmail;
 
             // Extract the accessToken
             //var accessToken = authHeader[0].Substring("Bearer ".Length);
@@ -79,23 +86,26 @@ namespace groveale
 
                 
                 // Will need to update metadata for each version otherwise dates won't match up
+                // Check if required
+                // todo creates a few too many versions
+                long bytesGained = 0;
                 foreach(var versionStream in orderedblobStreams)
                 {
                     // Upload content from blob stream to SPO Item
-                    await GraphHelper.UploadContentFromBlob(versionStream, spoFile.Id);
+                    bytesGained += await GraphHelper.UploadContentFromBlob(versionStream, spoFile.Id);
                     // Need to update the metadata post upload. Otherwise modified times get overwritten
                     await GraphHelper.UpdateMetadata(metaData, spoFile.Id);
                     // Strip off the _archive.txt to get the original file name
                     SPOFileHelper.UpdateReadOnlyMetaData(clientContext, $"{fileRelativeUrl.Substring(0, fileRelativeUrl.Length - 12)}", readOnlyMetadata);
                 }
-                
-
-                
-
+                var blobUri = $"{containerClient.Uri}/{blobName}";
 
                 // Delete Stub, delete blob
                 await GraphHelper.DeleteItem(false);
                 await AzureBlobHelper.DeleteBlob(containerClient, blobName);
+
+                // Log details in SPOList
+                var success = await SPOLogHelper.LogArchiveDetails(settings, spItemUrl, archiveMethod, spoFile.WebUrl, -bytesGained, orderedblobStreams.Count, archiveUserEmail, siteUrl, blobUri, "Restore");
 
                 // Return the active files count in response
                 return new OkObjectResult("Yay");
