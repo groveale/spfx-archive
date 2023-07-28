@@ -35,6 +35,11 @@ export default class ArchiveButtonCommandSet extends BaseListViewCommandSet<IArc
     const archiveVersionsProp: string = this.properties.archiveVersions;
     const archiveVersionCountProp: string = this.properties.archiveVersionCount;
 
+    if (archiveVersionsProp === undefined) {
+      this.properties.archiveVersions = "true";
+      this.properties.archiveVersionCount = "5";
+    }
+
     console.log("Archive Versions: " + archiveVersionsProp)
     console.log("Archive Version Count: " + archiveVersionCountProp)
 
@@ -88,8 +93,8 @@ export default class ArchiveButtonCommandSet extends BaseListViewCommandSet<IArc
         //this.dialogOpen = true;
 
         //this.sendRequest(`http://localhost:7071/api/ArchiveFile`, httpClientOptions)
-        this.sendRequest(`https://ag-spfx-archive.azurewebsites.net/api/archivefile`, httpClientOptions)
-        //this.sendRequest(`https://archivingfunctionapp18.azurewebsites.net/api/archivefile`, httpClientOptions)
+        //this.sendRequest(`https://ag-spfx-archive.azurewebsites.net/api/archivefile`, httpClientOptions)
+        this.sendRequest(`https://bp-archiving-function.azurewebsites.net/api/archivefile`, httpClientOptions)
 
         break;
       // Rehradte
@@ -101,8 +106,8 @@ export default class ArchiveButtonCommandSet extends BaseListViewCommandSet<IArc
         this.dialog.show();
         //this.dialogOpen = true;
 
-        this.sendRequest(`https://ag-spfx-archive.azurewebsites.net/api/rehydratefile`, httpClientOptions)
-        //this.sendRequest(`https://archivingfunctionapp18.azurewebsites.net/api/rehydratefile`, httpClientOptions)
+        //this.sendRequest(`https://ag-spfx-archive.azurewebsites.net/api/rehydratefile`, httpClientOptions)
+        this.sendRequest(`https://bp-archiving-function.azurewebsites.net/api/rehydratefile`, httpClientOptions)
 
         break;
       default:
@@ -121,7 +126,7 @@ export default class ArchiveButtonCommandSet extends BaseListViewCommandSet<IArc
         //this.dialogOpen = false;
         this.dialog.close()
         //this._onListViewStateChanged(new ListViewStateChangedEventArgs());
-        //location.reload();
+        location.reload();
       });
   }
 
@@ -142,7 +147,7 @@ export default class ArchiveButtonCommandSet extends BaseListViewCommandSet<IArc
     if (compareOneCommand) {
       // This command should be hidden unless exactly one row is selected and that item is not a url.
       compareOneCommand.visible = (this.context.listView.selectedRows?.length === 1  && 
-      this.context.listView.selectedRows[0].getValueByName("File_x0020_Type") !== 'url');
+      !this.context.listView.selectedRows[0].getValueByName("FileLeafRef").endsWith('_archive.txt'));
     }
 
     // Only show if item is a stub
@@ -150,7 +155,7 @@ export default class ArchiveButtonCommandSet extends BaseListViewCommandSet<IArc
     if (compareTwoCommand) {
       // This command should be hidden unless exactly one row is selected and that item is a url.
       compareTwoCommand.visible = (this.context.listView.selectedRows?.length === 1 && 
-        this.context.listView.selectedRows[0].getValueByName("File_x0020_Type") === 'url');
+        this.context.listView.selectedRows[0].getValueByName("FileLeafRef").endsWith('_archive.txt'));
     }
 
     // Refresh when link is added

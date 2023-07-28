@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Azure;
 using Azure.Core;
@@ -30,6 +31,9 @@ namespace groveale
             }
             containerName = containerName.Replace('/','-').ToLowerInvariant();
 
+            // As we have Psychopaths that put punctuation in URLs we need to remove those to
+            containerName = StripNonCompliantCharacters(containerName);
+
             try
             {
                 // Get the container
@@ -49,6 +53,12 @@ namespace groveale
             }
 
             return null;
+        }
+
+        public static string StripNonCompliantCharacters(string input)
+        {
+            // Use a regular expression to remove all non-compliant characters
+            return Regex.Replace(input, @"[^a-z\-]", "");
         }
     
     

@@ -39,9 +39,14 @@ namespace groveale
             //string tenantId = "groverale.onmicrosoft.com";
             string tenantId = Environment.GetEnvironmentVariable("tenantId");
 
+            // use old ACS method
+            //this.clientContext = new AuthenticationManager()
+               // .GetACSAppOnlyContext(this.siteUrl, clientId, clientSecret);
 
-            this.clientContext = new AuthenticationManager()
-                .GetACSAppOnlyContext(this.siteUrl, clientId, clientSecret);
+            // This works - can connect to SPO
+            this.clientContext = new PnP.Framework.AuthenticationManager(clientId, GetAppCertificate(certThumprint), tenantId, null, PnP.Framework.AzureEnvironment.Production, null).GetContext($"{this.siteUrl}");
+    
+    
 
             // var accessToken = await GetApplicationAuthenticatedClient(clientId, certThumprint, scopes, tenantId);
 
@@ -49,9 +54,28 @@ namespace groveale
             return this.clientContext;
         }
 
+        private X509Certificate2 GetAppCertificate(string certThumprint)
+        {
+            X509Certificate2 certificate = null;
+
+            if (Environment.GetEnvironmentVariable("AZURE_FUNCTIONS_ENVIRONMENT") == "Development")
+            {
+                certificate = GetAppOnlyCertificate(certThumprint);
+            }
+            else
+            {
+                string keyVaultName = Environment.GetEnvironmentVariable("keyVaultName");
+                string certNameKV = Environment.GetEnvironmentVariable("certNameKV");
+                certificate = GetCertificateFromKV(certNameKV, keyVaultName);
+            }
+
+            return certificate;
+        }
+
         private async Task<string> GetApplicationAuthenticatedClient(string clientId, string certThumprint, string[] scopes, string tenantId)
         {
             X509Certificate2 certificate = null;
+
             if (Environment.GetEnvironmentVariable("AZURE_FUNCTIONS_ENVIRONMENT") == "Development")
             {
                 certificate = GetAppOnlyCertificate(certThumprint);
