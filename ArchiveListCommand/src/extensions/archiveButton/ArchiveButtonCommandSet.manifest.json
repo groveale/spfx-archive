@@ -17,12 +17,12 @@
   "items": {
     "COMMAND_1": {
       "title": { "default": "Archive" },
-      "iconImageUrl": "icons/ic_archive.svg",
+      "iconImageUrl": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIGZpbGw9Im5vbmUiIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMjAgOHYxMS41YTIuNSAyLjUgMCAwIDEtMi41IDIuNWgtMTFBMi41IDIuNSAwIDAgMSA0IDE5LjVWOGgxNlptLTYgMy41aC00YS43NS43NSAwIDAgMCAwIDEuNWg0YS43NS43NSAwIDAgMCAwLTEuNVpNMjAgM2ExIDEgMCAwIDEgMSAxdjJhMSAxIDAgMCAxLTEgMUg0YTEgMSAwIDAgMS0xLTFWNGExIDEgMCAwIDEgMS0xaDE2WiIgZmlsbD0iIzAwOTkwMCIvPjwvc3ZnPg==",
       "type": "command"
     },
     "COMMAND_2": {
       "title": { "default": "Rehydrate" },
-      "iconImageUrl": "icons/ic_return.svg",
+      "iconImageUrl": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIGZpbGw9Im5vbmUiIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNNi4wODcgNy43NWE1Ljc1MiA1Ljc1MiAwIDAgMSAxMS4zMjYgMGguMDg3YTQgNCAwIDAgMSAzLjk2MiA0LjU1MiA2LjUwMSA2LjUwMSAwIDAgMC0xMS40MiAzLjQ0OEg2YTQgNCAwIDAgMSAwLThoLjA4N1pNMjIgMTYuNWE1LjUgNS41IDAgMSAwLTExIDAgNS41IDUuNSAwIDAgMCAxMSAwWm0tNi0zYS41LjUgMCAwIDEgMSAwdjQuNzkzbDEuNjQ2LTEuNjQ3YS41LjUgMCAwIDEgLjcwOC43MDhsLTIuNSAyLjVhLjUuNSAwIDAgMS0uNzA4IDBsLTIuNS0yLjVhLjUuNSAwIDAgMSAuNzA4LS43MDhMMTYgMTguMjkzVjEzLjVaIiBmaWxsPSIjMDA5OTAwIi8+PC9zdmc+",
       "type": "command"
     }
   }

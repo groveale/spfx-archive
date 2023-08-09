@@ -37,6 +37,12 @@ namespace groveale
             string archiveUserEmail = req.Query["archiveUserEmail"];
             string associatedLabel = req.Query["associatedLabel"];
 
+            // Only populated from label webhook
+            string siteId = req.Query["siteId"];
+            string listId = req.Query["listId"];
+            string itemId = req.Query["itemId"];
+            string folderPath = req.Query["folderPath"];
+
             // Read request body and deserialize it
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             dynamic data = JsonConvert.DeserializeObject(requestBody);
@@ -55,11 +61,14 @@ namespace groveale
             archiveVersionCount = archiveVersionCount ?? data?.archiveVersionCount;
 
             // Log data
-            archiveMethod = archiveMethod ?? data?.archiveMethod;
-            archiveUserEmail = archiveUserEmail ?? data?.archiveUserEmail;
+            archiveMethod ??= data?.archiveMethod;
+            archiveUserEmail ??= data?.archiveUserEmail;
 
-            // Extract the accessToken
-            //var accessToken = authHeader[0].Substring("Bearer ".Length);
+            // From label webhook
+            siteId = siteId ?? data?.siteId;
+            listId = listId ?? data?.listId;
+            itemId = itemId ?? data?.itemId;
+            folderPath = folderPath ?? data?.folderPath;
 
             try
             {
@@ -68,6 +77,22 @@ namespace groveale
                 // Method also extracts the required MSGraph data from the spItemURL
                 var settings = Settings.LoadSettings();
                 GraphHelper.InitializeGraphForAppOnlyAuth(settings, spItemUrl);
+
+                 // spItemUrl, serverRelativeUrl and  fileRelativeUrl are not populated from automated Label webhook
+                if (archiveMethod == "Label" )
+                {
+                    // Populate driveId and ItemId using SPO data
+                    await GraphHelper.PopulateDriveAndItemIdFromSPO(siteId, listId, itemId);
+                    serverRelativeUrl = SPOFileHelper.GetServerRelativeUrlFromSiteUrl(siteUrl);
+                    fileRelativeUrl = $"{serverRelativeUrl}/{folderPath}/{fileLeafRef}";
+                }
+
+                // spItemUrl is not populated from admin PowerShell script
+                if (archiveMethod == "Admin" )
+                {
+                    // Populate driveId and ItemId using SPO data
+                    await GraphHelper.PopulateDriveAndItemIdFromSPO(siteId, listId, itemId);
+                }
 
                 var SPOAuthHelper = new SPOAuthHelper(siteUrl);
                 var clientContext = await SPOAuthHelper.Init();
@@ -84,6 +109,15 @@ namespace groveale
                 var metaData = await GraphHelper.GetItemMetadata(columnsToRetrieve);
                 var spoFile = await GraphHelper.CreateItem(metaData, fileLeafRef, stub: false);
 
+                var newFileRelative = fileRelativeUrl[..^12];
+                if (spoFile.Name != fileLeafRef[..^12])
+                {
+                    // We have had a conflict so needed to rename the file so need a new file relative url
+                    string[] parts = newFileRelative.Split('/');
+                    parts[^1] = spoFile.Name;
+                    newFileRelative = string.Join('/', parts);
+                }
+
                 
                 // Will need to update metadata for each version otherwise dates won't match up
                 // Check if required
@@ -96,7 +130,7 @@ namespace groveale
                     // Need to update the metadata post upload. Otherwise modified times get overwritten
                     await GraphHelper.UpdateMetadata(metaData, spoFile.Id);
                     // Strip off the _archive.txt to get the original file name
-                    SPOFileHelper.UpdateReadOnlyMetaData(clientContext, $"{fileRelativeUrl.Substring(0, fileRelativeUrl.Length - 12)}", readOnlyMetadata);
+                    SPOFileHelper.UpdateReadOnlyMetaData(clientContext, $"{newFileRelative}", readOnlyMetadata);
                 }
                 var blobUri = $"{containerClient.Uri}/{blobName}";
 

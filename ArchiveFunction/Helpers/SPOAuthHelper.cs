@@ -56,8 +56,7 @@ namespace groveale
 
         private X509Certificate2 GetAppCertificate(string certThumprint)
         {
-            X509Certificate2 certificate = null;
-
+            X509Certificate2 certificate;
             if (Environment.GetEnvironmentVariable("AZURE_FUNCTIONS_ENVIRONMENT") == "Development")
             {
                 certificate = GetAppOnlyCertificate(certThumprint);

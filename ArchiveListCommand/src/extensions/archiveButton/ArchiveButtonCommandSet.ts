@@ -1,7 +1,6 @@
 import { Log } from '@microsoft/sp-core-library';
 import {
   BaseListViewCommandSet,
-  Command,
   IListViewCommandSetExecuteEventParameters,
   ListViewStateChangedEventArgs
 } from '@microsoft/sp-listview-extensibility';
@@ -44,8 +43,8 @@ export default class ArchiveButtonCommandSet extends BaseListViewCommandSet<IArc
     console.log("Archive Version Count: " + archiveVersionCountProp)
 
     // initial state of the command's visibility
-    const compareOneCommand: Command = this.tryGetCommand('COMMAND_1');
-    compareOneCommand.visible = false;
+    // const compareOneCommand: Command = this.tryGetCommand('COMMAND_1');
+    // compareOneCommand.visible = false;
 
     this.context.listView.listViewStateChangedEvent.add(this, this._onListViewStateChanged);
 
@@ -54,68 +53,86 @@ export default class ArchiveButtonCommandSet extends BaseListViewCommandSet<IArc
 
   public onExecute(event: IListViewCommandSetExecuteEventParameters): void {
 
-    var fileLeafRef: string = this.context.listView.selectedRows[0].getValueByName("FileLeafRef")
-    var fileRef: string = this.context.listView.selectedRows[0].getValueByName("FileRef")
-    var spItemUrl = this.context.listView.selectedRows[0].getValueByName(".spItemUrl")
-    var serverRelativeUrl = this.context.pageContext.web.serverRelativeUrl
+    for (let i = 0; i < this.context.listView.selectedRows.length; i++) {
 
-    const requestHeaders: Headers = new Headers();
-    requestHeaders.append('Content-type', 'application/json');
+      var fileLeafRef: string = this.context.listView.selectedRows[i].getValueByName("FileLeafRef")
+      var fileRef: string = this.context.listView.selectedRows[i].getValueByName("FileRef")
+      var spItemUrl = this.context.listView.selectedRows[i].getValueByName(".spItemUrl")
+      var serverRelativeUrl = this.context.pageContext.web.serverRelativeUrl
+  
+      const requestHeaders: Headers = new Headers();
+      requestHeaders.append('Content-type', 'application/json');
+  
+      const body: string = JSON.stringify({
+        'spItemUrl': spItemUrl,
+        'fileLeafRef': fileLeafRef,
+        'serverRelativeUrl': serverRelativeUrl,
+        'siteUrl': this.context.pageContext.web.absoluteUrl,
+        'fileRelativeUrl': fileRef,
+        'archiveVersions': this.properties.archiveVersions,
+        'archiveVersionCount': this.properties.archiveVersionCount,
+        'archiveMethod': ARCHIVE_METHOD,
+        'archiveUserEmail': this.context.pageContext.user.email,
+        'associatedLabel': 'todo'
+      });
+  
+      console.log(body)
+  
+      const httpClientOptions: IHttpClientOptions = {
+        body: body,
+        headers: requestHeaders
+      };
+  
+      switch (event.itemId) {
+        // Archive
+        case 'COMMAND_1':
+          // Send http request to flow
+          // full path to file
 
-    const body: string = JSON.stringify({
-      'spItemUrl': spItemUrl,
-      'fileLeafRef': fileLeafRef,
-      'serverRelativeUrl': serverRelativeUrl,
-      'siteUrl': this.context.pageContext.web.absoluteUrl,
-      'fileRelativeUrl': fileRef,
-      'archiveVersions': this.properties.archiveVersions,
-      'archiveVersionCount': this.properties.archiveVersionCount,
-      'archiveMethod': ARCHIVE_METHOD,
-      'archiveUserEmail': this.context.pageContext.user.email,
-      'associatedLabel': 'todo'
-    });
+          // Don't want to restore an item that is already restored
+          if (fileLeafRef.endsWith("_archive.txt")) {
+            this.dialog.message = `Skipping Archiving file ${i + 1} / ${this.context.listView.selectedRows.length} - Already Archived`
+            this.dialog.show();
+            break;
+          }
+  
+          this.dialog.message = `Archiving file ${i + 1} / ${this.context.listView.selectedRows.length}`
+          this.dialog.show();
+          //this.dialogOpen = true;
+  
+          //this.sendRequest(`http://localhost:7071/api/ArchiveFile`, httpClientOptions)
+          //this.sendRequest(`https://ag-spfx-archive.azurewebsites.net/api/archivefile`, httpClientOptions)
+          this.sendRequest(`https://bp-archiving-function.azurewebsites.net/api/archivefile`, httpClientOptions, i + 1, this.context.listView.selectedRows.length)
+  
+          break;
+        // Rehradte
+        case 'COMMAND_2':
+          // Dialog.prompt(`Clicked ${this.properties.sampleTextTwo}. Enter something to alert:`).then((value: string) => {
+          //   Dialog.alert(value);
+          // });
 
-    console.log(body)
+          // Don't want to restore an item that is already restored
+          if (!fileLeafRef.endsWith("_archive.txt")) {
+            this.dialog.message = `Skipping Rehydrating file ${i + 1} / ${this.context.listView.selectedRows.length} - Already Here`
+            this.dialog.show();
+            break;
+          }
 
-    const httpClientOptions: IHttpClientOptions = {
-      body: body,
-      headers: requestHeaders
-    };
-
-    switch (event.itemId) {
-      // Archive
-      case 'COMMAND_1':
-        // Send http request to flow
-        // full path to file
-
-        this.dialog.message = "Archiving"
-        this.dialog.show();
-        //this.dialogOpen = true;
-
-        //this.sendRequest(`http://localhost:7071/api/ArchiveFile`, httpClientOptions)
-        //this.sendRequest(`https://ag-spfx-archive.azurewebsites.net/api/archivefile`, httpClientOptions)
-        this.sendRequest(`https://bp-archiving-function.azurewebsites.net/api/archivefile`, httpClientOptions)
-
-        break;
-      // Rehradte
-      case 'COMMAND_2':
-        // Dialog.prompt(`Clicked ${this.properties.sampleTextTwo}. Enter something to alert:`).then((value: string) => {
-        //   Dialog.alert(value);
-        // });
-        this.dialog.message = "Rehydrating"
-        this.dialog.show();
-        //this.dialogOpen = true;
-
-        //this.sendRequest(`https://ag-spfx-archive.azurewebsites.net/api/rehydratefile`, httpClientOptions)
-        this.sendRequest(`https://bp-archiving-function.azurewebsites.net/api/rehydratefile`, httpClientOptions)
-
-        break;
-      default:
-        throw new Error('Unknown command');
+          this.dialog.message = `Rehydrating file ${i + 1} / ${this.context.listView.selectedRows.length}`
+          this.dialog.show();
+          //this.dialogOpen = true;
+  
+          //this.sendRequest(`https://ag-spfx-archive.azurewebsites.net/api/rehydratefile`, httpClientOptions)
+          this.sendRequest(`https://bp-archiving-function.azurewebsites.net/api/rehydratefile`, httpClientOptions, i + 1, this.context.listView.selectedRows.length)
+  
+          break;
+        default:
+          throw new Error('Unknown command');
+      }
     }
   }
 
-  private async sendRequest(uri: string, httpClientOptions: IHttpClientOptions) : Promise<void> {
+  private async sendRequest(uri: string, httpClientOptions: IHttpClientOptions, reqNum: number, totalReqs: number) : Promise<void> {
     return await this.context.httpClient.post(
         uri,
         HttpClient.configurations.v1, 
@@ -124,9 +141,12 @@ export default class ArchiveButtonCommandSet extends BaseListViewCommandSet<IArc
       .then(response => {
         console.log(response.status)
         //this.dialogOpen = false;
-        this.dialog.close()
         //this._onListViewStateChanged(new ListViewStateChangedEventArgs());
-        location.reload();
+        
+        if (reqNum === totalReqs) {
+          this.dialog.close();
+          location.reload();
+        }
       });
   }
 
@@ -143,20 +163,20 @@ export default class ArchiveButtonCommandSet extends BaseListViewCommandSet<IArc
     console.log("Archive Version Count: " + archiveVersionCountProp)
     
 
-    const compareOneCommand: Command = this.tryGetCommand('COMMAND_1');
-    if (compareOneCommand) {
-      // This command should be hidden unless exactly one row is selected and that item is not a url.
-      compareOneCommand.visible = (this.context.listView.selectedRows?.length === 1  && 
-      !this.context.listView.selectedRows[0].getValueByName("FileLeafRef").endsWith('_archive.txt'));
-    }
+    // const compareOneCommand: Command = this.tryGetCommand('COMMAND_1');
+    // if (compareOneCommand) {
+    //   // This command should be hidden unless exactly one row is selected and that item is not a url.
+    //   compareOneCommand.visible = (this.context.listView.selectedRows?.length === 1  && 
+    //   !this.context.listView.selectedRows[0].getValueByName("FileLeafRef").endsWith('_archive.txt'));
+    // }
 
-    // Only show if item is a stub
-    const compareTwoCommand: Command = this.tryGetCommand('COMMAND_2');
-    if (compareTwoCommand) {
-      // This command should be hidden unless exactly one row is selected and that item is a url.
-      compareTwoCommand.visible = (this.context.listView.selectedRows?.length === 1 && 
-        this.context.listView.selectedRows[0].getValueByName("FileLeafRef").endsWith('_archive.txt'));
-    }
+    // // Only show if item is a stub
+    // const compareTwoCommand: Command = this.tryGetCommand('COMMAND_2');
+    // if (compareTwoCommand) {
+    //   // This command should be hidden unless exactly one row is selected and that item is a url.
+    //   compareTwoCommand.visible = (this.context.listView.selectedRows?.length === 1 && 
+    //     this.context.listView.selectedRows[0].getValueByName("FileLeafRef").endsWith('_archive.txt'));
+    // }
 
     // Refresh when link is added
     // if (this.dialogOpen && (args.prevState.rows.length < this.context.listView.rows.length))

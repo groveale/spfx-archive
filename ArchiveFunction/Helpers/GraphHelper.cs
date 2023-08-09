@@ -52,9 +52,12 @@ namespace groveale
                     new[] {"https://graph.microsoft.com/.default"});
             }
 
-            // spItem
-            ExtractDriveIdFromUrl(spItemURL);
-            ExtractFileIdFromUrl(spItemURL);
+            if (!String.IsNullOrEmpty(spItemURL))
+            {
+                // spItem
+                ExtractDriveIdFromUrl(spItemURL);
+                ExtractFileIdFromUrl(spItemURL);
+            }
         }
 
         
@@ -164,12 +167,22 @@ namespace groveale
             _ = _appClient ??
                 throw new System.NullReferenceException("Graph has not been initialized for app-only auth");
 
+            // First get the driveItem parent reference
+            if (String.IsNullOrEmpty(_parentId))
+            {
+                // Get the drive item parent reference (folder
+                string[] selectProperties = { "parentReference" }; 
+                var driveItem = await _appClient.Drives[_driveId].Items[_itemId]
+                    .Request()
+                    .Select(string.Join(",", selectProperties))
+                    .GetAsync();
+
+                // used for creating the stub / rehydrated file
+                _parentId = driveItem.ParentReference.Id;
+            }
+
             // For some reason the list item cannot be retrieved from the drive item
             var listItem = await _appClient.Drives[_driveId].Items[_itemId].ListItem.Request().GetAsync();
-
-
-            // used for creating the stub / rehydrated file
-            _parentId = listItem.ParentReference.Id;
 
             // Will need to make a list of all Non-custom or default fields
             // Might work but would need to be kept uptodate when new features that require fields are released
@@ -204,6 +217,23 @@ namespace groveale
                 {
                     fileName = fileName.Substring(0, fileName.Length - 12);
                 }
+
+                // Check if file with name already exists in parent - If so append a 1 to the end of the name
+                var items = await _appClient.Drives[_driveId].Items[_parentId].Children
+                    .Request()
+                    .Filter($"name eq '{fileName}'")
+                    .GetAsync();
+
+                if (items.Count > 0)
+                {
+                    var split =  fileName.Split('.');
+
+                    // We are generating a GUID and adding the first 8 characters to the file name
+                    split[0] = split[0] + Guid.NewGuid().ToString()[..8];
+
+                    fileName = String.Join('.', split);
+                }
+                
             }
 
             // May need to create item first and then apply metadata 
@@ -345,6 +375,24 @@ namespace groveale
         
             return bytesSaved;
         }
-    
+
+        public static async Task PopulateDriveAndItemIdFromSPO(string siteId, string listId, string itemId)
+        {
+            // Ensure client isn't null
+            _ = _appClient ??
+                throw new System.NullReferenceException("Graph has not been initialized for app-only auth");
+
+            string[] selectProperties = { "id","parentReference" }; 
+
+            var result = await _appClient.Sites[siteId].Lists[listId].Items[itemId].DriveItem
+                .Request()
+                .Select(string.Join(",", selectProperties))
+                .GetAsync();
+
+            // Update Globals
+            _driveId = result.ParentReference.DriveId;
+            _parentId = result.ParentReference.Id;
+            _itemId = result.Id;
+        }
     }
 }

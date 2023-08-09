@@ -48,5 +48,17 @@ namespace groveale
 
             return metaData;
         }
+    
+        public static string GetServerRelativeUrlFromSiteUrl(string siteUrl)
+        {
+            // Split the url
+            var splitUrl = siteUrl.Split("/");
+
+            // Use array slicing to get the remaining items after the first 3 (hostname)
+            string[] serverRelativeElements = splitUrl[3..];
+
+            // Return the joined array with a leading slash
+            return $"/{string.Join("/", serverRelativeElements)}";
+        }
     }
 }

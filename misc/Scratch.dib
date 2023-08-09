@@ -1,0 +1,53 @@
+#!meta
+
+{"kernelInfo":{"defaultKernelName":"csharp","items":[{"aliases":[],"languageName":"csharp","name":"csharp"}]}}
+
+#!csharp
+
+var url = "https://bptest.sharepoint.com/sites/archivedev/dsa/dsa";
+
+var splitUrl = url.Split("/");
+
+// Use array slicing to get the remaining items after the first 3
+string[] newArray = splitUrl[3..];
+
+// Print the new array
+foreach (var item in newArray)
+{
+    Console.WriteLine(item);
+}
+
+#!csharp
+
+// Join the array items using '/'
+string joinedString = $"/{string.Join("/", newArray)}";
+
+ Console.WriteLine(joinedString);
+
+#!csharp
+
+string fileName = "_archive.txt";
+
+var split =  fileName.Split('.');
+
+split[0] = split[0] + "1";
+
+fileName = String.Join<string>('.', split);
+
+ Console.WriteLine(fileName);
+
+#!csharp
+
+string newFileRelative = "/sites/archivedev/LibraryTesting/Document.docx_archive.txt";
+
+string spoFile = "Document1.docx";
+
+string[] parts = newFileRelative.Split('/');
+                    parts[^1] = spoFile;
+                    newFileRelative = string.Join('/', parts);
+
+ Console.WriteLine(newFileRelative);
+
+#!csharp
+
+ Console.WriteLine(Guid.NewGuid().ToString().Substring(0, 8));
