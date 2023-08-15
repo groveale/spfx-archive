@@ -9,30 +9,41 @@ namespace groveale
     public class SPOFileHelper
     {
 
-        public static void UpdateReadOnlyMetaData(ClientContext clientContext, string serverRelativeUrl, Dictionary<string, object> readOnlyMetadata)
+        public static void UpdateModifiedDateTime(ClientContext clientContext, string serverRelativeUrl, string modifiedDateTime)
+        {
+            var file = clientContext.Web.GetFileByServerRelativeUrl(serverRelativeUrl);
+            file.ListItemAllFields["Modified"] = modifiedDateTime;
+            file.ListItemAllFields.SystemUpdate();
+            clientContext.ExecuteQuery();
+        }
+
+        public static void UpdateMetaData(ClientContext clientContext, string serverRelativeUrl, Dictionary<string, object> allMetadata)
         {
 
+            //var item = clientContext.Web.GetListItem(serverRelativeUrl);
             var file = clientContext.Web.GetFileByServerRelativeUrl(serverRelativeUrl);
 
-            foreach(var metaData in readOnlyMetadata)
+            foreach(var metaData in allMetadata)
             {
                 file.ListItemAllFields[metaData.Key] = metaData.Value;
             }
 
-            // System update is a red herring
-            //file.ListItemAllFields.SystemUpdate();
-            file.ListItemAllFields.Update();
-
+            // Using UpdateOverWriteVersion as it appears to enable you to update the metadata without incrementing the version number
+            file.ListItemAllFields.UpdateOverwriteVersion();
             clientContext.ExecuteQuery();
+
         }
 
         // All metadata should be SPO really
-        public static Dictionary<string, object> GetReadOnlyMetaDataSPO(ClientContext clientContext, string serverRelativeUrl)
+        public static Dictionary<string, object> GetMetaDataSPO(ClientContext clientContext, string serverRelativeUrl, List<string> columnsToGet)
         {
             var metaData = new Dictionary<string, object>();
             var propsToGet = new List<string> { "Author" , "Created", "Modified", "Editor", "Modified_x0020_By", "Created_x0020_By" };
 
+            propsToGet.AddRange(columnsToGet);
+
             var file = clientContext.Web.GetFileByServerRelativeUrl(serverRelativeUrl);
+
             clientContext.Load(file);
             clientContext.Load(file.ListItemAllFields);
             clientContext.ExecuteQuery();
@@ -42,8 +53,8 @@ namespace groveale
                 if (propsToGet.Contains(field.Key))
                 {
                     metaData.Add(field.Key, field.Value);
+                    continue;
                 }
-                
             }
 
             return metaData;
@@ -59,6 +70,41 @@ namespace groveale
 
             // Return the joined array with a leading slash
             return $"/{string.Join("/", serverRelativeElements)}";
+        }
+
+        public static Dictionary<string, object> GetNonReadOnlyMetaDataSPO(ClientContext clientContext, string serverRelativeUrl)
+        {
+            var metaData = new Dictionary<string, object>();
+
+            var file = clientContext.Web.GetFileByServerRelativeUrl(serverRelativeUrl);
+
+            clientContext.Load(file);
+            clientContext.Load(file, l => l.ListId);
+            clientContext.Load(file.ListItemAllFields);
+            clientContext.ExecuteQuery();
+
+            var list = clientContext.Web.GetListById(file.ListId);
+            clientContext.Load(list.Fields);
+            clientContext.ExecuteQuery();
+
+            foreach(var field in list.Fields)
+            {
+                try 
+                {
+                    if (field.ReadOnlyField == false)
+                    {
+                        metaData.Add(field.InternalName, file.ListItemAllFields.FieldValues[field.InternalName]);
+                    }
+                }
+                catch
+                {
+                    // Ignore
+                    System.Console.WriteLine($"Error getting metadata for field: {field.InternalName}");
+                }
+                
+            }
+
+            return metaData;
         }
     }
 }

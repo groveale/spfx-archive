@@ -97,7 +97,7 @@ namespace groveale
                 var SPOAuthHelper = new SPOAuthHelper(siteUrl);
                 var clientContext = await SPOAuthHelper.Init();
 
-                var readOnlyMetadata = SPOFileHelper.GetReadOnlyMetaDataSPO(clientContext, fileRelativeUrl);
+                
 
                 // Get file content from Blob storage and create in SPO
                 var containerClient = await AzureBlobHelper.CreateContainerAsync(serverRelativeUrl, settings.StorageConnectionString);
@@ -108,6 +108,8 @@ namespace groveale
                 var columnsToRetrieve = await GraphHelper.GetListColumns();
                 var metaData = await GraphHelper.GetItemMetadata(columnsToRetrieve);
                 var spoFile = await GraphHelper.CreateItem(metaData, fileLeafRef, stub: false);
+
+                var readOnlyMetadata = SPOFileHelper.GetMetaDataSPO(clientContext, fileRelativeUrl, columnsToRetrieve);
 
                 var newFileRelative = fileRelativeUrl[..^12];
                 if (spoFile.Name != fileLeafRef[..^12])
@@ -128,9 +130,9 @@ namespace groveale
                     // Upload content from blob stream to SPO Item
                     bytesGained += await GraphHelper.UploadContentFromBlob(versionStream, spoFile.Id);
                     // Need to update the metadata post upload. Otherwise modified times get overwritten
-                    await GraphHelper.UpdateMetadata(metaData, spoFile.Id);
+                    //await GraphHelper.UpdateMetadata(metaData, spoFile.Id);
                     // Strip off the _archive.txt to get the original file name
-                    SPOFileHelper.UpdateReadOnlyMetaData(clientContext, $"{newFileRelative}", readOnlyMetadata);
+                    SPOFileHelper.UpdateMetaData(clientContext, $"{newFileRelative}", readOnlyMetadata);
                 }
                 var blobUri = $"{containerClient.Uri}/{blobName}";
 

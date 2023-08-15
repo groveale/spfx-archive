@@ -217,23 +217,22 @@ namespace groveale
                 {
                     fileName = fileName.Substring(0, fileName.Length - 12);
                 }
+            }
 
-                // Check if file with name already exists in parent - If so append a 1 to the end of the name
-                var items = await _appClient.Drives[_driveId].Items[_parentId].Children
-                    .Request()
-                    .Filter($"name eq '{fileName}'")
-                    .GetAsync();
+            // Check if file with name already exists in parent - If so append a 1 to the end of the name
+            var items = await _appClient.Drives[_driveId].Items[_parentId].Children
+                .Request()
+                .Filter($"name eq '{fileName}'")
+                .GetAsync();
 
-                if (items.Count > 0)
-                {
-                    var split =  fileName.Split('.');
+            if (items.Count > 0)
+            {
+                var split =  fileName.Split('.');
 
-                    // We are generating a GUID and adding the first 8 characters to the file name
-                    split[0] = split[0] + Guid.NewGuid().ToString()[..8];
+                // We are generating a GUID and adding the first 8 characters to the file name
+                split[0] = split[0] + Guid.NewGuid().ToString()[..8];
 
-                    fileName = String.Join('.', split);
-                }
-                
+                fileName = String.Join('.', split);
             }
 
             // May need to create item first and then apply metadata 
@@ -295,9 +294,16 @@ namespace groveale
                 AdditionalData = metadata
             };
 
-            var updatedFile = await _appClient.Drives[_driveId].Items[itemId].ListItem.Fields
-                .Request()
-                .UpdateAsync(fieldValueSet);
+            try {
+                var updatedFile = await _appClient.Drives[_driveId].Items[itemId].ListItem.Fields
+                                .Request()
+                                .UpdateAsync(fieldValueSet);
+            }
+            catch 
+            {
+                Console.WriteLine("Error updating metadata");
+            }
+            
 
         }
 

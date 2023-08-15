@@ -91,18 +91,20 @@ export default class ArchiveButtonCommandSet extends BaseListViewCommandSet<IArc
 
           // Don't want to restore an item that is already restored
           if (fileLeafRef.endsWith("_archive.txt")) {
-            this.dialog.message = `Skipping Archiving file ${i + 1} / ${this.context.listView.selectedRows.length} - Already Archived`
-            this.dialog.show();
+            // this.dialog.message = `Skipping Archiving file - Already Archived`
+            // this.dialog.show();
             break;
           }
   
-          this.dialog.message = `Archiving file ${i + 1} / ${this.context.listView.selectedRows.length}`
+          this.dialog.message = `Archiving files (${this.context.listView.selectedRows.length})`
           this.dialog.show();
           //this.dialogOpen = true;
   
-          //this.sendRequest(`http://localhost:7071/api/ArchiveFile`, httpClientOptions)
-          //this.sendRequest(`https://ag-spfx-archive.azurewebsites.net/api/archivefile`, httpClientOptions)
-          this.sendRequest(`https://bp-archiving-function.azurewebsites.net/api/archivefile`, httpClientOptions, i + 1, this.context.listView.selectedRows.length)
+          this.sendRequest(`http://localhost:7071/api/ArchiveFile`, httpClientOptions, i + 1, this.context.listView.selectedRows.length)
+  
+          //this.sendRequest(`https://ag-spfx-archive.azurewebsites.net/api/archivefile`, httpClientOptions, i + 1, this.context.listView.selectedRows.length)
+  
+          //this.sendRequest(`https://bp-archiving-function.azurewebsites.net/api/archivefile`, httpClientOptions, i + 1, this.context.listView.selectedRows.length)
   
           break;
         // Rehradte
@@ -113,17 +115,18 @@ export default class ArchiveButtonCommandSet extends BaseListViewCommandSet<IArc
 
           // Don't want to restore an item that is already restored
           if (!fileLeafRef.endsWith("_archive.txt")) {
-            this.dialog.message = `Skipping Rehydrating file ${i + 1} / ${this.context.listView.selectedRows.length} - Already Here`
-            this.dialog.show();
+            // this.dialog.message = `Skipping Rehydrating file ${i + 1} / ${this.context.listView.selectedRows.length} - Already Here`
+            // this.dialog.show();
             break;
           }
 
-          this.dialog.message = `Rehydrating file ${i + 1} / ${this.context.listView.selectedRows.length}`
+          this.dialog.message = `Rehydrating files (${this.context.listView.selectedRows.length})`
           this.dialog.show();
           //this.dialogOpen = true;
   
           //this.sendRequest(`https://ag-spfx-archive.azurewebsites.net/api/rehydratefile`, httpClientOptions)
-          this.sendRequest(`https://bp-archiving-function.azurewebsites.net/api/rehydratefile`, httpClientOptions, i + 1, this.context.listView.selectedRows.length)
+          //this.sendRequest(`https://bp-archiving-function.azurewebsites.net/api/rehydratefile`, httpClientOptions, i + 1, this.context.listView.selectedRows.length)
+          this.sendRequest(`http://localhost:7071/api/RehydrateFile`, httpClientOptions, i + 1, this.context.listView.selectedRows.length)
   
           break;
         default:

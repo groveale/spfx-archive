@@ -102,17 +102,32 @@ namespace groveale
                 clientContext.ExecuteQuery();
                 Console.WriteLine($"Site name: {clientContext.Web.Title}");
 
-                var readOnlyMetadata = SPOFileHelper.GetReadOnlyMetaDataSPO(clientContext, fileRelativeUrl);
+                
 
                 // Get metadata content and create stub in SPO (.url)
                 var columnsToRetrieve = await GraphHelper.GetListColumns();
+                // This is not used
                 var metaData = await GraphHelper.GetItemMetadata(columnsToRetrieve);
+
+                var spoMetadata = SPOFileHelper.GetMetaDataSPO(clientContext, fileRelativeUrl, columnsToRetrieve);
 
                 var stub = await GraphHelper.CreateItem(metaData, fileLeafRef, stub: true);
                 await GraphHelper.UpdateStubContent(stub.Id);
-                await GraphHelper.UpdateMetadata(metaData, stub.Id);
 
-                SPOFileHelper.UpdateReadOnlyMetaData(clientContext, $"{fileRelativeUrl}_archive.txt", readOnlyMetadata);
+                // This icrements the version number (not good)
+                //await GraphHelper.UpdateMetadata(metaData, stub.Id);
+
+                var newFileRelative = $"{fileRelativeUrl}_archive.txt";
+                if (stub.Name != $"{fileLeafRef}_archive.txt")
+                {
+                    // We have had a conflict so needed to rename the file so need a new file relative url
+                    string[] parts = newFileRelative.Split('/');
+                    parts[^1] = stub.Name;
+                    newFileRelative = string.Join('/', parts);
+                }
+
+
+                SPOFileHelper.UpdateMetaData(clientContext, newFileRelative, spoMetadata);
 
                 // Get file content and create in Azure blob (using stub file id)
                 var containerClient = await AzureBlobHelper.CreateContainerAsync(serverRelativeUrl, settings.StorageConnectionString);
