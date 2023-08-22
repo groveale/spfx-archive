@@ -61,6 +61,23 @@ namespace groveale
             return Regex.Replace(input, @"[^a-z\-]", "");
         }
     
+        
+        public static async Task SetBlobMetadataAsync(BlobClient blob,  IDictionary<string, string> metadata)
+        {
+            Console.WriteLine("Setting blob metadata...");
+
+            try
+            {
+                // Set the blob's metadata.
+                await blob.SetMetadataAsync(metadata);
+            }
+            catch (RequestFailedException e)
+            {
+                Console.WriteLine($"HTTP error code {e.Status}: {e.ErrorCode}");
+                Console.WriteLine(e.Message);
+            }
+        }
+
     
         //-------------------------------------------------
         // Create a blob (File stream)

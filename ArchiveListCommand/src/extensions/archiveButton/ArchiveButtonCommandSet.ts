@@ -100,11 +100,11 @@ export default class ArchiveButtonCommandSet extends BaseListViewCommandSet<IArc
           this.dialog.show();
           //this.dialogOpen = true;
   
-          this.sendRequest(`http://localhost:7071/api/ArchiveFile`, httpClientOptions, i + 1, this.context.listView.selectedRows.length)
+          //this.sendRequest(`http://localhost:7071/api/ArchiveFile`, httpClientOptions, i + 1, this.context.listView.selectedRows.length)
   
           //this.sendRequest(`https://ag-spfx-archive.azurewebsites.net/api/archivefile`, httpClientOptions, i + 1, this.context.listView.selectedRows.length)
   
-          //this.sendRequest(`https://bp-archiving-function.azurewebsites.net/api/archivefile`, httpClientOptions, i + 1, this.context.listView.selectedRows.length)
+          this.sendRequest(`https://bp-archiving-function.azurewebsites.net/api/archivefile`, httpClientOptions, i + 1, this.context.listView.selectedRows.length)
   
           break;
         // Rehradte
@@ -125,8 +125,8 @@ export default class ArchiveButtonCommandSet extends BaseListViewCommandSet<IArc
           //this.dialogOpen = true;
   
           //this.sendRequest(`https://ag-spfx-archive.azurewebsites.net/api/rehydratefile`, httpClientOptions)
-          //this.sendRequest(`https://bp-archiving-function.azurewebsites.net/api/rehydratefile`, httpClientOptions, i + 1, this.context.listView.selectedRows.length)
-          this.sendRequest(`http://localhost:7071/api/RehydrateFile`, httpClientOptions, i + 1, this.context.listView.selectedRows.length)
+          this.sendRequest(`https://bp-archiving-function.azurewebsites.net/api/rehydratefile`, httpClientOptions, i + 1, this.context.listView.selectedRows.length)
+          //this.sendRequest(`http://localhost:7071/api/RehydrateFile`, httpClientOptions, i + 1, this.context.listView.selectedRows.length)
   
           break;
         default:
