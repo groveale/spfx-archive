@@ -4,7 +4,8 @@ This solution has been developed to demonstrate a method to add self service arc
 
 * Dynamic Metadata
 * Permission maintained
-* Searchability maintained (except content)
+* Version Support
+* Searchability maintained (content with Graph Connector)
 * All File Types
 * Maintains last modified / created dates and users
 * Fast / Background processing
@@ -22,6 +23,7 @@ The solution contains five components:
 * Azure Function            (API)
 * Azure Storage Account     (Storage tier)
 * Key Vault                 (Certificate storage)
+* Graph Connector           (Content Search)
 
 The front end to the solution could easily be swapped out to something else, a script, a bot even a PowerAutoamte trigger. The SPFx List extension simply posts a data payload to the Azure Function to identify the file that should be archived. Anything that can replicate this functionality can be used.
 
@@ -48,7 +50,7 @@ A ListView extension, also known as a ListViewCommandSet, is a type of SharePoin
 
 The solution utilizes SPFx ListView Extensions to add two additional buttons to both the command bar and context menu. These buttons are as follows:
 
-![ListView Extension](./res/overview.png)
+![ListView Extension]()
 
 These buttons simply make a post request with the relevant selected item information to the Archiving API (Azure Function)
 
@@ -71,9 +73,13 @@ const body: string = JSON.stringify({
 
 If more than one file is selected then multiple requests are sent to the API - One request per file.
 
-### Client Side Settings
+### Client Side Settings (Versions)
 
-There are two settings that can be applied to the extention. These settings will apply to t
+There are two settings that can be applied to the extension. These settings control if previous versions will be archived. The settings will apply to a site where the extension has been deployed. I.e This settings is to be configured on a site by site basis.
+
+Steps to configure
+
+Todo
 
 ## Archiving API (Azure Function)
 
@@ -140,4 +146,118 @@ The Rehydrate function will get the file from blob (using the file ids of the st
 >
 > If a stub is deleted from SPO it will be almost impossible to recover a file from the Archive. The Stub is the key to the archive location. 
 
+### Identity
+
+A system assigned managed identity is required for the function. This is used to grant permissions to the KeyVault that holds the certificate used to connect to M365. It's also possible to reuse this identity as the app registration that is used to connect to M365. 
+
+The managed identity is authenticated with Azure AD, so there is no need to store any credentials in code.
+
+![Function Identity](./res/FunctionIdentity.png)
+
 ## Azure Storage Account
+
+Azure Storage Gen2 Account is used as the data layer of the solution. 
+
+### Structure
+
+A container is created for each site collection in the storage account. This is to ensure uniqueness at the container level.
+
+The container name must be lowercase and can only contain hypernymns. Therefore '/' are replaced with '-' and then non compliant characters are stripped using the following `Regex` 
+
+```c#
+public static string StripNonCompliantCharacters(string input)
+{
+    // Use a regular expression to remove all non-compliant characters
+    return Regex.Replace(input, @"[^a-z\-]", "");
+}
+```
+
+Example container structure:
+
+![Containers in storage account](./res/ContainersStorage.png)
+
+> **Note**
+>
+> If a site URL is changed then all archived will not be able to be recovered by the user. This will be a cumbersome admin activity. It is not recommended to change the URL of sites that contain archived files 
+
+Within the site collection container the blobs are named `{driveId}-{drivItemId}`.This is again to ensure uniqueness at the blob level within the containers. Each Library (Drive) within a site has a unique `driveId` and each document (driveItem) within a library has a unique `driveItemId`. 
+
+This structure is how a user can rehydrate a file. The driveItemId is actually the driveItemId of the stub file rather than the archived file. This means that as long as the Stub is intact a user will always be able to bring back a file from the archive.
+
+Example blob structure:
+
+![Blobs in a container](./res/BlobsContainer.png)
+
+> **Note**
+>
+> If a stub is deleted then it will be very difficult to recover the archived file without cumbersome admin activity. 
+
+### Versioning
+
+The Storage account must have versioning switched on to support archiving versions. The version config is included in the payload of the request that is sent to the API. Version config needs to be configured on the invocation method.
+
+### Metadata (TODO)
+
+Metadata is also stored on the archived blobs. This includes:
+
+* File Name
+* File Extension
+* Site Url
+* Site Relative Url
+* Creator (User)
+* Editor (User)
+* Archiver (User)
+* Archive date (DateTime)
+* Last Modified (DateTime)
+
+This metadata does not include all SPO metadata as this is stored on the stub. This metadata is captured to better support searching via Graph Connector.
+
+### Access
+
+The API accesses the storage account using a connection string. It is recommended that users are not given direct access to the blobs. Only th API should have access to the storage account.
+
+### Blob Life Cycle
+
+A number of blob access rules should be configured to move blobs to cheaper storage. This will decrease the monthly reoccurring cost of the blob storage. These rules are configured in the storage account Lifecycle Management blade.
+
+Example rule:
+
+![Move blobs to cool tier](./res/CoolTeir.png)
+
+Moving blobs to cheaper storage will increase the rehydrate time.
+
+## Key Vault 
+
+Azure Key Vault is a cloud service for securely storing and accessing secrets. A secret is anything that you want to tightly control access to, such as API keys, passwords or certificates. In our case we will be using the Key Vault to store the certificate that the Azure function uses to access M365.
+
+An access control policy should be set up on the Key vault to ensure that the Azure function has permission to access the certificate.
+
+The policy simply needs to give the principal that represent azure function Get permission for both Secrets and Certificates.
+
+![Access Control Policy](./res/AccessControlPolicy.png)
+
+> **Note**
+>
+> The Storage Account connection string should also be stored in the KeyVault. This change will be made in a subsequent release
+
+## Search
+
+Search is important as whilst the files have been archived as they are deemed no longer needed. It may still be necessary to find an archived file. There will be a number of options to do this. The stub will be in the same place that the archived file was, if the user knows they archived a file they can rehydrate it from the stub. Any user can rehydrate a file from a stub, as long as they have access to the stub.
+
+### Microsoft Search
+
+Microsoft Search will still be a search option. All metatdata that was applied to the archived file will be searchable as it's now applied to the stub. If a user can find the stub, they will have the ability to rehydrate the archived file.
+
+> **Note**
+>
+> As all the content of the file is now in archive, the content of the file will not be searchable using Microsoft Search, only the file metadata.
+
+### Graph Connector
+
+A Graph Connector can be configured to provide content search for the files in archive. The Azure Data Lake Storage Gen2 Microsoft Graph connector allows user  to search for files stored in Azure Blob Storage and Azure Data Lake Gen 2 Storage accounts. Details on how to set up and configure the connector can be found [here](https://learn.microsoft.com/en-us/microsoftsearch/azure-data-lake-connector).
+
+Once the Graph connector has been set up, the archived files will be included in the MSGrap sematic index so will be available to `copilot` users.
+
+With Graph Connectors it's possible to customise the Search result experience using Adaptive Cards. This means we are able to include direct links to the content in SPO from the search result. A user can click the result and be taken to SharePoint and can rehydrate the file (if required).
+
+![Search Result Example](./res/SearchResultExample.png)
