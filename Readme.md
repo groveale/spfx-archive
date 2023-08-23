@@ -1,6 +1,6 @@
 # SPFx Self Service Archival
 
-This solution has been developed to demonstrate a method to add self service archival functionality to SharePoint. This is low cost, low maintenance solution simple solution. The following features are supported
+This solution has been developed to demonstrate a method to add self service archival functionality to SharePoint. This is low cost, low maintenance, simple solution. The following features are supported
 
 * Dynamic Metadata
 * Permission maintained
@@ -14,7 +14,7 @@ This solution has been developed to demonstrate a method to add self service arc
 
 The diagram below provides a general overview of the solution.
 
-![Overview](./res/overview.png)
+![Overview](./res/Overview.png)
 
 The solution contains five components:
 
@@ -77,9 +77,29 @@ If more than one file is selected then multiple requests are sent to the API - O
 
 There are two settings that can be applied to the extension. These settings control if previous versions will be archived. The settings will apply to a site where the extension has been deployed. I.e This settings is to be configured on a site by site basis.
 
-Steps to configure
+By default versions are not archived.
 
-Todo
+```json
+"properties" : {
+    "archiveVersions": false,
+    "archiveVersionCount": 0
+}
+```
+
+To update these settings to a deployed version of the extension on a Site Collection you can use the following PowerShell:
+
+```powershell
+Set-PnPApplicationCustomizer -ClientSideComponentId aa66f67e-46c0-4474-8a82-42bf467d07f2 -Scope Site -ClientSideComponentProperties '{"achiveVersions": true, "achiveVersionCount": 10 }'
+```
+
+This will have the following effect on the solution config. But remember this will only apply to the site that the above command was ran on.
+
+```json
+"properties" : {
+    "archiveVersions": true,
+    "archiveVersionCount": 10
+}
+```
 
 ## Archiving API (Azure Function)
 
@@ -120,6 +140,12 @@ All actions are logged to a SPO list - This list must exist on the site specifie
 "archiveHubListName": "ArchiveLog",
 ```
 
+The details of the this list are:
+
+![Log List Details](./res/ArchiveListConfig.png)
+
+![Log List in SPO](./res/ArchiveLog.png)
+
 #### Stub
 
 The API creates a Stub .txt file in place of the archived item. This stub contains a message stating that the file has been archived with a link to a page that should explain the process of Archiving and Rehydrating. This link is specified in the `linkToKB` parameter
@@ -153,6 +179,16 @@ A system assigned managed identity is required for the function. This is used to
 The managed identity is authenticated with Azure AD, so there is no need to store any credentials in code.
 
 ![Function Identity](./res/FunctionIdentity.png)
+
+### Conflicts
+
+It's possible that naming conflicts will occur, both when Archiving and Rehdrating. The example below shows a word document called `Document.docx`. In this instance a user has rehydrated a file which was also called `Document.docx` - There is now a naming conflict, the API generates a GUID and adds the first 8 characters of the GUID to the filename. 
+
+We also have an archived file that was called `v1.docx` (some terrible document names in this example). Let's say another document was created with the same name and now it needs to be archived. When the API attempts to create the stub there will be a conflict. So again, the API generates a GUID and adds the first 8 characters of the GUID to the filename.
+
+These two examples can be seen in the screenshot below:
+
+![Naming Conflicts](./res/Conflicts.png)
 
 ## Azure Storage Account
 
@@ -260,4 +296,4 @@ Once the Graph connector has been set up, the archived files will be included in
 
 With Graph Connectors it's possible to customise the Search result experience using Adaptive Cards. This means we are able to include direct links to the content in SPO from the search result. A user can click the result and be taken to SharePoint and can rehydrate the file (if required).
 
-![Search Result Example](.\res\SearchResultExample.png)
+![Search Result Example](./res/SearchResultExample.png)
