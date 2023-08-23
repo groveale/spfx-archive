@@ -260,4 +260,4 @@ Once the Graph connector has been set up, the archived files will be included in
 
 With Graph Connectors it's possible to customise the Search result experience using Adaptive Cards. This means we are able to include direct links to the content in SPO from the search result. A user can click the result and be taken to SharePoint and can rehydrate the file (if required).
 
-![Search Result Example](./res/SearchResultExample.png)
+![Search Result Example](.\res\SearchResultExample.png)
